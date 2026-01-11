@@ -1,2 +1,15 @@
-node_modules
-.env
+# Node.js
+mi-red-social-backend/node_modules/
+mi-red-social-backend/dist/
+mi-red-social-backend/build/
+mi-red-social-backend/.env
+mi-red-social-backend/npm-debug.log*
+mi-red-social-backend/yarn-debug.log*
+mi-red-social-backend/yarn-error.log*
+mi-red-social-backend/.nyc_output/
+mi-red-social-backend/.temp/
+mi-red-social-backend/.DS_Store
+
+# Editor/IDE specific
+.vscode/
+.idea/
