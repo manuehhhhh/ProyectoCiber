@@ -2,60 +2,60 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SoyUCAB - Inicio</title>
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="css/estilos.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
 
     <div class="contenedor_principal">
-
-        <aside class="barra_lateral_izquierda">
+        
+        <div class="barra_lateral_izquierda">
             <div class="logo_app">
-                <i class='bx bxs-brain' style="font-size: 3rem; color: #ff6b6b;"></i>
+                <img src="img/avatar_placeholder.png" alt="Logo" style="width: 50px; border-radius: 5px;">
             </div>
-
+            
             <nav class="menu_navegacion">
                 <a href="#" class="item_menu activo">
-                    <i class='bx bx-home-alt-2'></i> Inicio
+                    <i class="fa-solid fa-house"></i> Inicio
+                </a>
+                <div class="separador_menu"></div>
+                <a href="#" class="item_menu">
+                    <i class="fa-solid fa-users"></i> Grupos Suscritos
                 </a>
                 <a href="#" class="item_menu">
-                    <i class='bx bx-group'></i> Grupos Suscritos
-                </a>
-                <a href="#" class="item_menu">
-                    <i class='bx bx-megaphone'></i> Eventos Suscritos
+                    <i class="fa-solid fa-bullhorn"></i> Eventos Suscritos
                 </a>
             </nav>
-        </aside>
+        </div>
 
         <main class="columna_central">
             
             <div class="contenedor_busqueda">
-                <i class='bx bx-search icono_busqueda'></i>
+                <i class="fa-solid fa-magnifying-glass icono_busqueda"></i>
                 <input type="text" class="input_busqueda" placeholder="Buscar">
             </div>
 
             <div class="caja_crear_publicacion">
-                <div class="cabecera_caja_publicar">
-                    <span class="titulo_caja">Publica algo...</span>
+                <div class="cabecera_azul">
+                    Publica algo...
                 </div>
-                <div class="cuerpo_caja_publicar">
-                    <div class="input_falso_publicacion">
-                        <i class='bx bx-user-circle icono_usuario_input'></i>
-                        <input type="text" placeholder="Comparte tus ideas">
+                <div class="cuerpo_publicar">
+                    <div class="input_con_icono">
+                        <i class="fa-regular fa-circle-user icono_usuario_post"></i>
+                        <textarea id="txt-publicacion" rows="2" placeholder="Comparte tus ideas"></textarea>
                     </div>
-                    <div class="pie_caja_publicar">
-                        <i class='bx bx-camera icono_camara'></i>
-                        <div class="grupo_accion_publicar">
-                            <span class="contador_caracteres">200</span>
+                    <div class="pie_publicar">
+                        <i class="fa-regular fa-image icono_camara"></i>
+                        <div class="acciones_derecha">
+                            <span id="contador-caracteres" class="contador">200</span>
                             <button class="boton_publicar">Publicar</button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="pestanas_filtro">
+            <div class="barra_pestanas">
                 <button class="pestana activo">Publicaciones</button>
                 <button class="pestana">Grupos</button>
                 <button class="pestana">Eventos</button>
@@ -63,66 +63,33 @@
                 <button class="pestana">Recursos</button>
             </div>
 
-            <div class="feed_publicaciones">
-                
-                <article class="tarjeta_publicacion">
-                    <header class="encabezado_publicacion">
-                        <div class="info_autor">
-                            <div class="avatar_autor"></div> 
-                            <div class="datos_autor">
-                                <span class="nombre_autor">Samuel Velásquez</span>
-                                <span class="usuario_autor">@sevelasquez.22</span>
-                            </div>
-                        </div>
-                        <span class="tiempo_publicacion">Hace 2 minutos</span>
-                    </header>
-                    <div class="contenido_publicacion">
-                        <p>¿Alguien me podría explicar como hacer un ciclo For en C++?</p>
-                    </div>
-                    <footer class="pie_publicacion">
-                        <div class="acciones_sociales">
-                            <span>1 <i class='bx bx-heart'></i></span>
-                            <span>2 <i class='bx bx-message-rounded'></i></span>
-                        </div>
-                    </footer>
-                </article>
-
-                <article class="tarjeta_publicacion">
-                    <header class="encabezado_publicacion">
-                        <div class="info_autor">
-                            <div class="avatar_autor"></div>
-                            <div class="datos_autor">
-                                <span class="nombre_autor">Rosxana Medero</span>
-                                <span class="usuario_autor">@rymedero.22</span>
-                            </div>
-                        </div>
-                        <span class="tiempo_publicacion">Hace 5 minutos</span>
-                    </header>
-                    <div class="contenido_publicacion">
-                        <p>Chicoss!! hay una exposición de arte en biblioteca!!!</p>
-                        <div class="imagen_adjunta_placeholder"></div>
-                    </div>
-                </article>
-
+            <div id="lista-publicaciones" class="feed_publicaciones">
+                <p style="text-align:center; padding: 20px; color: #777;">Cargando...</p>
             </div>
         </main>
 
         <aside class="barra_lateral_derecha">
-            <div class="tarjeta_perfil_mini">
-                <div class="avatar_perfil"></div>
-                <div class="info_perfil">
-                    <span class="nombre_perfil">Daniela Silva</span>
-                    <span class="usuario_perfil">@dasilva.22</span>
+            <div class="header_perfil">
+                <div id="info-usuario-logueado" class="info_usuario_top">
+                    <img src="img/avatar_placeholder.png" class="avatar_top">
+                    <div class="textos_top">
+                        <span class="nombre_top">Cargando...</span>
+                        <span class="usuario_top">...</span>
+                    </div>
                 </div>
-                <i class='bx bx-chevron-down icono_menu_perfil'></i>
+                <div class="contenedor_dropdown">
+                    <i class="fa-solid fa-chevron-down flecha_menu" id="btn-dropdown"></i>
+                    <div id="menu-dropdown" class="menu_flotante oculto">
+                        <a href="#"><i class="fa-solid fa-gear"></i> Ajustes</a>
+                        <a href="#" style="color: red;"><i class="fa-solid fa-right-from-bracket"></i> Salir</a>
+                    </div>
+                </div>
             </div>
-
-            <div class="seccion_notificaciones">
-                <h3 class="titulo_notificaciones">Notificaciones</h3>
-                </div>
+            <h3 class="titulo_seccion">Notificaciones</h3>
         </aside>
 
     </div>
 
+    <script src="js/main.js"></script>
 </body>
 </html>
