@@ -1,48 +1,79 @@
 const express = require('express');
 const router = express.Router();
+
+// 1. Importación de Modelos y Middleware
 const models = require('../models');
-const createCRUDController = require('../controllers/genericController');
 const { authenticate } = require('../middleware/auth');
 
-// --- IMPORTAMOS LOS CONTROLADORES ESPECÍFICOS (Solo una vez) ---
+// 2. Importación de Controladores
+const createCRUDController = require('../controllers/genericController');
 const likesController = require('../controllers/likesController');
 const commentsController = require('../controllers/commentsController');
+const postController = require('../controllers/postController');
 
-// ==========================================
-// 1. RUTAS ESPECÍFICAS (Likes y Comentarios)
-// ==========================================
+// =====================================================================
+// SECCIÓN A: RUTAS ESPECÍFICAS Y PERSONALIZADAS (Prioridad Alta)
+// =====================================================================
+// NOTA: Estas rutas se definen PRIMERO para evitar que el CRUD genérico
+// (Sección B) las sobrescriba o intercepte.
 
-// --- LIKES ---
+// --- GESTIÓN DE PUBLICACIONES (Posts) ---
+// Ruta para crear un post (guarda en tabla Post y Publicacion)
+router.post('/publicar', postController.crearPost);
+
+// Ruta para obtener posts ORDENADOS (descendente por fecha)
+// IMPORTANTE: Esta línea arregla el problema del orden cronológico.
+router.get('/post', postController.obtenerPosts);
+
+
+// --- GESTIÓN DE LIKES (Me Gusta) ---
+// Alternar like (Dar o quitar)
 router.post('/likes/toggle', likesController.toggleLike);
+
+// Consultar cantidad de likes y si el usuario actual dio like
 router.get('/likes/:id_post', likesController.obtenerLikes);
 
-// --- COMENTARIOS ---
+
+// --- GESTIÓN DE COMENTARIOS ---
+// Obtener todos los comentarios de un post específico
 router.get('/comments/:id_post', commentsController.obtenerComentarios);
+
+// Crear un nuevo comentario
 router.post('/comments', commentsController.crearComentario);
+
+// Contar comentarios (para mostrar el número en el feed)
 router.get('/comments/count/:id_post', commentsController.contarComentarios);
 
 
-// ==========================================
-// 2. RUTAS AUTOMÁTICAS (CRUD Genérico)
-// ==========================================
-// Recorremos todos los modelos para crear sus rutas base automáticamente
+// =====================================================================
+// SECCIÓN B: RUTAS AUTOMÁTICAS CRUD (Prioridad Baja)
+// =====================================================================
+// Este bucle genera rutas básicas (GET, POST, PUT, DELETE) para todos
+// los modelos que no hayan sido interceptados arriba.
+
 for (const modelName in models) {
-    if (models[modelName].prototype) { // Asegurar que es un modelo de Sequelize
+    if (models[modelName].prototype) { // Validamos que sea un modelo de Sequelize
         const model = models[modelName];
         const controller = createCRUDController(model);
         const route = express.Router();
 
-        // Si quisieras activar seguridad, descomenta la siguiente línea:
+        // -------------------------------------------------------------
+        // Configuración de Seguridad (Opcional)
+        // Descomenta la siguiente línea para proteger todas las rutas:
         // route.use(authenticate);
+        // -------------------------------------------------------------
 
-        // Definir rutas CRUD básicas
-        route.post('/', controller.create);
-        route.get('/', controller.getAll);
-        route.get('/:id', controller.getById);
-        route.put('/:id', controller.update);
-        route.delete('/:id', controller.delete);
+        // Definición de Endpoints Estándar
+        route.post('/', controller.create);      // Crear
+        route.get('/', controller.getAll);       // Leer todos (sin orden específico)
+        route.get('/:id', controller.getById);   // Leer uno por ID
+        route.put('/:id', controller.update);    // Actualizar
+        route.delete('/:id', controller.delete); // Borrar
 
-        // Usar el nombre del modelo en minúsculas como ruta (ej: /api/persona)
+        // Montaje de la ruta
+        // Ejemplo: Si el modelo es 'Persona', la ruta base será '/persona'
+        // NOTA: Si ya definimos '/post' arriba manualmente, Express usará
+        // esa definición primero para la ruta exacta GET /post.
         router.use(`/${modelName.toLowerCase()}`, route);
     }
 }
