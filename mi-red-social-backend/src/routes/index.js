@@ -10,19 +10,16 @@ const createCRUDController = require('../controllers/genericController');
 const likesController = require('../controllers/likesController');
 const commentsController = require('../controllers/commentsController');
 const postController = require('../controllers/postController');
+const profileController = require('../controllers/profileController');
 
 // =====================================================================
 // SECCIÓN A: RUTAS ESPECÍFICAS Y PERSONALIZADAS (Prioridad Alta)
-// =====================================================================
-// NOTA: Estas rutas se definen PRIMERO para evitar que el CRUD genérico
-// (Sección B) las sobrescriba o intercepte.
-
+// ===============================================
 // --- GESTIÓN DE PUBLICACIONES (Posts) ---
 // Ruta para crear un post (guarda en tabla Post y Publicacion)
 router.post('/publicar', postController.crearPost);
 
 // Ruta para obtener posts ORDENADOS (descendente por fecha)
-// IMPORTANTE: Esta línea arregla el problema del orden cronológico.
 router.get('/post', postController.obtenerPosts);
 
 
@@ -44,6 +41,8 @@ router.post('/comments', commentsController.crearComentario);
 // Contar comentarios (para mostrar el número en el feed)
 router.get('/comments/count/:id_post', commentsController.contarComentarios);
 
+// --- RUTA DE PERFIL ---
+router.get('/profile/:id', profileController.obtenerPerfil);
 
 // =====================================================================
 // SECCIÓN B: RUTAS AUTOMÁTICAS CRUD (Prioridad Baja)
