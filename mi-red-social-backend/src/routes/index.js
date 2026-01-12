@@ -4,24 +4,45 @@ const models = require('../models');
 const createCRUDController = require('../controllers/genericController');
 const { authenticate } = require('../middleware/auth');
 
-// Dynamically create routes for all models
+// --- IMPORTAMOS LOS CONTROLADORES ESPECÍFICOS (Solo una vez) ---
+const likesController = require('../controllers/likesController');
+const commentsController = require('../controllers/commentsController');
+
+// ==========================================
+// 1. RUTAS ESPECÍFICAS (Likes y Comentarios)
+// ==========================================
+
+// --- LIKES ---
+router.post('/likes/toggle', likesController.toggleLike);
+router.get('/likes/:id_post', likesController.obtenerLikes);
+
+// --- COMENTARIOS ---
+router.get('/comments/:id_post', commentsController.obtenerComentarios);
+router.post('/comments', commentsController.crearComentario);
+router.get('/comments/count/:id_post', commentsController.contarComentarios);
+
+
+// ==========================================
+// 2. RUTAS AUTOMÁTICAS (CRUD Genérico)
+// ==========================================
+// Recorremos todos los modelos para crear sus rutas base automáticamente
 for (const modelName in models) {
-    if (models[modelName].prototype) { // Ensure it's a Sequelize model
+    if (models[modelName].prototype) { // Asegurar que es un modelo de Sequelize
         const model = models[modelName];
         const controller = createCRUDController(model);
         const route = express.Router();
 
-        // All routes for a model are protected by authentication
-        //route.use(authenticate);
+        // Si quisieras activar seguridad, descomenta la siguiente línea:
+        // route.use(authenticate);
 
-        // Define CRUD routes
+        // Definir rutas CRUD básicas
         route.post('/', controller.create);
         route.get('/', controller.getAll);
         route.get('/:id', controller.getById);
         route.put('/:id', controller.update);
         route.delete('/:id', controller.delete);
 
-        // Use the model name in lowercase as the route path
+        // Usar el nombre del modelo en minúsculas como ruta (ej: /api/persona)
         router.use(`/${modelName.toLowerCase()}`, route);
     }
 }

@@ -89,7 +89,28 @@
         </aside>
 
     </div>
+<div id="modal-comentarios" class="modal_overlay oculto">
+        <div class="modal_contenido">
+            
+            <div class="modal_header">
+                <h3>Comentarios</h3>
+                <button id="btn-cerrar-modal" class="btn_cerrar">&times;</button>
+            </div>
 
+            <div id="lista-comentarios-modal" class="modal_body">
+                <p class="cargando-texto">Cargando...</p>
+            </div>
+
+            <div class="modal_footer">
+    <input type="text" id="input-nuevo-comentario" placeholder="Escribe un comentario..." autocomplete="off">
+    
+    <span id="contador-comentario" style="color: #4fc1e9; font-weight: bold; font-size: 0.8rem; margin-right: 10px;">200</span>
+    
+    <button id="btn-enviar-comentario" class="boton_publicar">Enviar</button>
+</div>
+            
+        </div>
+    </div>
     <script src="js/main.js"></script>
 </body>
 </html>
