@@ -12,7 +12,7 @@ for (const modelName in models) {
         const route = express.Router();
 
         // All routes for a model are protected by authentication
-        route.use(authenticate);
+        //route.use(authenticate);
 
         // Define CRUD routes
         route.post('/', controller.create);

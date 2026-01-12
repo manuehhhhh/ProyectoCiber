@@ -3,31 +3,39 @@ const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
 const path = require('path');
-require('dotenv').config(); // Carga variables de entorno
+require('dotenv').config();
 
-// Importamos la conexión a la BD para que se ejecute al iniciar
-require('./db'); 
+// 1. Importamos la conexión de Sequelize (ya no usamos ./db)
+const db = require('./models'); 
+
+// 2. Importamos el archivo de rutas (src/routes/index.js)
+// Node busca automáticamente el archivo "index.js" dentro de la carpeta routes
+const routes = require('./routes'); 
 
 // Inicializaciones
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middlewares
-app.use(morgan('dev')); // Ver peticiones en consola
-app.use(cors()); // Permitir conexiones externas
-app.use(express.json()); // Entender JSON que viene del frontend
+app.use(morgan('dev'));
+app.use(cors());
+app.use(express.json());
 
-// --- AQUÍ FALTAN TUS RUTAS ---
-// Por ahora no tienes rutas definidas en el código que pasaste, 
-// pero cuando crees archivos en la carpeta 'routes', se importan así:
-// app.use('/api/usuarios', require('./routes/usuarios.routes')); 
+// 3. CONECTAMOS LAS RUTAS
+// Aquí le decimos: "Todo lo que llegue a /api, manéjalo con el archivo routes"
+app.use('/api', routes);
 
-// Archivos Estáticos
-// Esto sirve tu carpeta 'public' (HTML, CSS, JS del frontend)
+// Archivos Estáticos (Tu frontend)
 app.use(express.static(path.join(__dirname, '../public')));
 
-// Iniciar el servidor
-app.listen(PORT, () => {
-    console.log(`🚀 Servidor corriendo en el puerto ${PORT}`);
-    console.log(`👉 http://localhost:${PORT}`);
+// 4. Sincronizar Base de Datos y Arrancar
+// force: false asegura que NO se borren tus datos al reiniciar
+db.sequelize.sync({ force: false }).then(() => {
+    console.log("✅ Tablas sincronizadas con Sequelize");
+    app.listen(PORT, () => {
+        console.log(`🚀 Servidor corriendo en el puerto ${PORT}`);
+        console.log(`👉 http://localhost:${PORT}`);
+    });
+}).catch((error) => {
+    console.error("❌ Error al sincronizar la base de datos:", error);
 });
