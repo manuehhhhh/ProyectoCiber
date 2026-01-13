@@ -281,3 +281,18 @@ textarea { border: none; outline: none; width: 100%; color: var(--texto-oscuro);
     
     display: block;
 }
+
+.boton_eliminar {
+    margin-left: auto; /* Empuja el botón a la derecha */
+    color: #888;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.boton_eliminar:hover {
+    color: #dc3545; /* Rojo peligro */
+    background-color: #ffebeb;
+    border-radius: 50%;
+    padding: 5px;
+    margin: -5px; /* Ajuste para que no mueva lo demás */
+}

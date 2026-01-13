@@ -4,7 +4,7 @@
  * Versión: Incluye Perfil, Amistad, Comentarios y SUBIDA DE IMÁGENES.
  */
 
-const ID_USUARIO_LOGUEADO = 1; 
+const ID_USUARIO_LOGUEADO = 2; 
 let ID_POST_ACTUAL_EN_MODAL = null;
 let archivoPostSeleccionado = null; // Variable global para la imagen del post
 
@@ -154,7 +154,7 @@ async function irAlPerfil(idUsuario) {
             contenedorPosts.innerHTML = '<p style="text-align:center; color:#777; padding:20px">No hay publicaciones.</p>';
         } else {
             for (const post of datos.posts) {
-                const htmlPost = await crearHTMLTarjetaPost(post, datos);
+                const htmlPost = await crearHTMLTarjetaPost(post, datos, true); 
                 contenedorPosts.innerHTML += htmlPost;
             }
         }
@@ -335,20 +335,21 @@ function configurarBotonPublicar() {
 // 4. GENERACIÓN DE TARJETAS 🃏
 // ==========================================
 
-async function crearHTMLTarjetaPost(post, autorPredefinido = null) {
+async function crearHTMLTarjetaPost(post, autorPredefinido = null, esVistaPerfil = false) {
     let datosAutor = autorPredefinido;
+    
     if (!datosAutor || !datosAutor.handle) { 
         datosAutor = await obtenerDatosAutor(post.id_usuario);
     }
     
     const nombre = datosAutor.nombre || "Usuario";
     const handle = datosAutor.handle || "@usuario";
-    // Usar la foto del autor o el placeholder
-    const avatarAutor = datosAutor.foto ? datosAutor.foto : 'img/avatar_placeholder.png';
+    const urlFoto = datosAutor.foto || datosAutor.foto_perfil;
+    const avatarAutor = urlFoto ? urlFoto : 'img/avatar_placeholder.png';
     const tiempoTexto = formatearTiempo(post.tiempo_post);
     
     // Likes y Comentarios
-    let likes = 0; let colorLike = ""; let claseCorazon = "fa-regular";
+    let likes = 0; let claseCorazon = "fa-regular"; let colorLike = "";
     try {
         const rL = await fetch(`/api/likes/${post.id_post}?id_usuario_actual=${ID_USUARIO_LOGUEADO}`);
         const dL = await rL.json();
@@ -359,24 +360,36 @@ async function crearHTMLTarjetaPost(post, autorPredefinido = null) {
     let comentarios = 0;
     try { const rC = await fetch(`/api/comments/count/${post.id_post}`); const dC = await rC.json(); comentarios = dC.cantidad; } catch(e){}
 
-    // Renderizar imagen del post si existe
+    // Imagen
     let htmlImagenPost = '';
     if (post.contenido_multimedia_post) {
         htmlImagenPost = `
             <div class="contenedor_multimedia_post">
                 <img src="${post.contenido_multimedia_post}" class="imagen_post_feed">
+            </div>`;
+    }
+
+    // ============================================================
+    // LÓGICA DEL BOTÓN ELIMINAR (MODIFICADA)
+    // ============================================================
+    let htmlBotonEliminar = '';
+    if (post.id_usuario == ID_USUARIO_LOGUEADO && esVistaPerfil === true) {
+        htmlBotonEliminar = `
+            <div class="accion_social boton_eliminar" onclick="eliminarPost(${post.id_post})" title="Eliminar">
+                <i class="fa-solid fa-trash"></i>
             </div>
         `;
     }
+    // ============================================================
 
     return `
-        <div class="tarjeta_publicacion">
+        <div class="tarjeta_publicacion" id="post-${post.id_post}">
             <div class="encabezado_post">
                 <div class="autor_info">
                     <img src="${avatarAutor}" class="avatar_post">
                     <div class="nombres_post">
-                        <span class="nombre_real" style="cursor:pointer" onclick="irAlPerfil(${post.id_usuario})">${nombre}</span>
-                        <span class="usuario" style="cursor:pointer" onclick="irAlPerfil(${post.id_usuario})">${handle}</span>
+                        <span class="nombre_real" onclick="irAlPerfil(${post.id_usuario})" style="cursor:pointer">${nombre}</span>
+                        <span class="usuario" onclick="irAlPerfil(${post.id_usuario})" style="cursor:pointer">${handle}</span>
                     </div>
                 </div>
                 <span class="tiempo">${tiempoTexto}</span>
@@ -386,12 +399,16 @@ async function crearHTMLTarjetaPost(post, autorPredefinido = null) {
             ${htmlImagenPost}
 
             <div class="footer_post">
-                <div class="accion_social" onclick="darLike(${post.id_post}, this)">
-                    <span class="numero-likes">${likes}</span> <i class="${claseCorazon} fa-heart" style="${colorLike}"></i> 
+                <div style="display:flex; gap:20px;">
+                    <div class="accion_social" onclick="darLike(${post.id_post}, this)">
+                        <span class="numero-likes">${likes}</span> <i class="${claseCorazon} fa-heart" style="${colorLike}"></i> 
+                    </div>
+                    <div class="accion_social" onclick="abrirModalComentarios(${post.id_post})">
+                        <span>${comentarios}</span> <i class="fa-regular fa-comment"></i>
+                    </div>
                 </div>
-                <div class="accion_social" onclick="abrirModalComentarios(${post.id_post})">
-                    <span>${comentarios}</span> <i class="fa-regular fa-comment"></i>
-                </div>
+                
+                ${htmlBotonEliminar}
             </div>
         </div>
     `;
@@ -730,4 +747,31 @@ function configurarBuscador() {
             lista.classList.add('oculto');
         }
     });
+}
+
+// FUNCIÓN PARA ELIMINAR EL POST
+async function eliminarPost(idPost) {
+    // 1. Preguntamos confirmación
+    if (!confirm("¿Seguro que quieres borrar esto?")) return;
+
+    try {
+        // 2. Llamamos al backend
+        const res = await fetch(`/api/post/${idPost}?id_usuario_actual=${ID_USUARIO_LOGUEADO}`, {
+            method: 'DELETE'
+        });
+
+        if (res.ok) {
+            // 3. Si funcionó, quitamos el post de la pantalla
+            const tarjeta = document.getElementById(`post-${idPost}`);
+            if (tarjeta) {
+                tarjeta.style.opacity = '0'; // Efecto visual
+                setTimeout(() => tarjeta.remove(), 500); // Lo borramos
+            }
+        } else {
+            alert("No se pudo eliminar.");
+        }
+    } catch (error) {
+        console.error(error);
+        alert("Error de conexión");
+    }
 }

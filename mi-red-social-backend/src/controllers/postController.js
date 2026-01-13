@@ -17,7 +17,6 @@ module.exports = {
             let rutaImagen = null;
             if (req.file) {
                 // Guardamos la ruta relativa para que sea accesible desde el navegador
-                // Ejemplo: /uploads/posts/1627883-mi_foto.jpg
                 rutaImagen = `/uploads/posts/${req.file.filename}`;
             }
 
@@ -55,6 +54,34 @@ module.exports = {
         } catch (error) {
             console.error("Error al obtener posts:", error);
             res.status(500).json({ error: 'Error al obtener posts' });
+        }
+    }, // <--- ¡AQUÍ FALTABA LA COMA! (Ya la puse)
+
+    // 3. ELIMINAR POST (Nueva función)
+    eliminarPost: async (req, res) => {
+        const { id } = req.params; // El ID del post a borrar
+        const { id_usuario_actual } = req.query; // Quién intenta borrarlo
+
+        try {
+            const post = await Post.findByPk(id);
+
+            if (!post) {
+                return res.status(404).json({ error: 'Publicación no encontrada' });
+            }
+
+            // SEGURIDAD: ¿Eres el dueño del post?
+            // Si el dueño del post NO es igual al usuario actual, error.
+            if (post.id_usuario != id_usuario_actual) {
+                return res.status(403).json({ error: 'No tienes permiso.' });
+            }
+
+            // Si eres el dueño, lo borramos
+            await post.destroy();
+            res.json({ mensaje: 'Borrado correctamente' });
+
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ error: 'Error al eliminar' });
         }
     }
 };

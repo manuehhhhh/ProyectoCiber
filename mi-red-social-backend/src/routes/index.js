@@ -21,12 +21,10 @@ const searchController = require('../controllers/searchController');
 // =====================================================================
 
 // --- GESTIÓN DE PUBLICACIONES (Posts) ---
-// CORREGIDO: Agregado upload.single('imagen_post') para procesar texto + imagen
+
 router.post('/publicar', upload.single('imagen_post'), postController.crearPost);
-
-// Ruta para obtener posts ORDENADOS (descendente por fecha)
 router.get('/post', postController.obtenerPosts);
-
+router.delete('/post/:id', postController.eliminarPost);
 
 // --- PERFIL Y USUARIOS ---
 router.get('/profile/:id', profileController.obtenerPerfil);

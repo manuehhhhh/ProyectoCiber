@@ -1,6 +1,7 @@
-const { Post, Miembro, Persona, DependenciaUniversitaria, OrganizacionAsociada, Carrera, Estudia, Estudiante, SeRelaciona } = require('../models');
+const { Post, Miembro, Persona, DependenciaUniversitaria, OrganizacionAsociada, Carrera, Estudia, Estudiante, SeRelaciona, Sequelize } = require('../models');
+const { Op } = Sequelize; // <--- NECESARIO PARA HACER EL "OR" (O esto O aquello)
 
-// Función auxiliar para obtener nombre y handle de un ID cualquiera
+// Función auxiliar para obtener nombre y handle
 async function obtenerDatosBasicos(id) {
     try {
         const miembro = await Miembro.findByPk(id);
@@ -19,9 +20,7 @@ async function obtenerDatosBasicos(id) {
             const o = await OrganizacionAsociada.findOne({ where: { id_miembro: id } });
             if (o) nombre = o.nombre_organizacion;
         }
-        // Nota: Aquí devolvemos 'foto' para la lista de seguidos, 
-        // pero el frontend en esa sección lo maneja bien.
-        return { id, nombre, handle, foto: miembro.foto_perfil }; 
+        return { id, nombre, handle, foto: miembro.foto_perfil };
     } catch (e) { return null; }
 }
 
@@ -37,11 +36,8 @@ module.exports = {
             let datos = { 
                 nombre: "Usuario", 
                 tipo: "Miembro", 
-                carrera: null, // Solo se llenará si es estudiante
+                carrera: null, 
                 handle: miembro.nombre_usuario,
-                // =======================================================
-                // CORRECCIÓN: AGREGAMOS LA FOTO AL OBJETO PRINCIPAL
-                // =======================================================
                 foto_perfil: miembro.foto_perfil 
             };
 
@@ -50,11 +46,9 @@ module.exports = {
                 const p = await Persona.findOne({ where: { id_miembro: id } });
                 if (p) datos.nombre = `${p.nombres} ${p.apellidos}`;
                 
-                // Verificar si es Estudiante
                 const esEstudiante = await Estudiante.findByPk(id);
                 if (esEstudiante) {
                     datos.tipo = "Estudiante";
-                    // Buscar Carrera
                     const estudia = await Estudia.findOne({ where: { id_estudiante: id } });
                     if (estudia) {
                         const carrera = await Carrera.findByPk(estudia.id_carrera);
@@ -75,26 +69,57 @@ module.exports = {
                 datos.tipo = "Organización";
             }
 
-            // 3. OBTENER ESTADÍSTICAS (SE RELACIONA)
-            // Seguidores: Yo soy el receptor
+            // =======================================================
+            // 3. OBTENER ESTADÍSTICAS (LÓGICA CORREGIDA) 🧠
+            // =======================================================
+            
+            // SEGUIDORES (Gente que me sigue a mí):
+            // - Si son 'ACEPTADA' o 'SIGUE' y yo soy el receptor.
+            // - O si somos 'AMIGO' (en cualquier dirección).
             const countSeguidores = await SeRelaciona.count({ 
-                where: { id_receptor: id, estado_vinculo: 'ACEPTADA' } 
+                where: { 
+                    [Op.or]: [
+                        { id_receptor: id, estado_vinculo: ['ACEPTADA', 'SIGUE', 'AMIGO'] },
+                        { id_solicitador: id, estado_vinculo: 'AMIGO' } // Si yo pedí amistad, ellos también me siguen
+                    ]
+                } 
             });
 
-            // Seguidos: Yo soy el solicitador
+            // SEGUIDOS (Gente a la que yo sigo):
+            // - Si yo soy el solicitador ('ACEPTADA', 'SIGUE', 'AMIGO').
+            // - O si yo soy el receptor PERO somos 'AMIGO' (la amistad es recíproca).
             const countSeguidos = await SeRelaciona.count({ 
-                where: { id_solicitador: id, estado_vinculo: 'ACEPTADA' } 
+                where: { 
+                    [Op.or]: [
+                        { id_solicitador: id, estado_vinculo: ['ACEPTADA', 'SIGUE', 'AMIGO'] },
+                        { id_receptor: id, estado_vinculo: 'AMIGO' } // Si me pidieron amistad, yo también los sigo
+                    ]
+                } 
             });
 
-            // 4. OBTENER LISTA DE SEGUIDOS (Detalles para la pestaña)
+            // 4. OBTENER LISTA DE SEGUIDOS (Misma lógica del count)
             const relacionesSeguidos = await SeRelaciona.findAll({
-                where: { id_solicitador: id, estado_vinculo: 'ACEPTADA' }
+                where: { 
+                    [Op.or]: [
+                        { id_solicitador: id, estado_vinculo: ['ACEPTADA', 'SIGUE', 'AMIGO'] },
+                        { id_receptor: id, estado_vinculo: 'AMIGO' }
+                    ]
+                } 
             });
 
-            // Buscamos los nombres de cada persona que sigo
             const listaSeguidos = [];
             for (const rel of relacionesSeguidos) {
-                const info = await obtenerDatosBasicos(rel.id_receptor); // El receptor es a quien sigo
+                // Truco: Averiguar quién es la "otra" persona
+                // Si yo soy el solicitador, el seguido es el receptor.
+                // Si yo soy el receptor (caso AMIGO), el seguido es el solicitador.
+                let idOtroUsuario;
+                if (rel.id_solicitador == id) {
+                    idOtroUsuario = rel.id_receptor;
+                } else {
+                    idOtroUsuario = rel.id_solicitador;
+                }
+
+                const info = await obtenerDatosBasicos(idOtroUsuario);
                 if (info) listaSeguidos.push(info);
             }
 
@@ -104,7 +129,6 @@ module.exports = {
                 order: [['tiempo_post', 'DESC']]
             });
 
-            // ENVIAR RESPUESTA COMPLETA
             res.json({ 
                 ...datos, 
                 stats: { seguidores: countSeguidores, seguidos: countSeguidos }, 
@@ -117,4 +141,5 @@ module.exports = {
             res.status(500).json({ error: 'Error al cargar perfil' });
         }
     }
+    
 };
