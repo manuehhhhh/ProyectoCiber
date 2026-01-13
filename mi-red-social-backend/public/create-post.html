@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>SoyUCAB - Crear/Editar Post</title>
+    <link rel="stylesheet" href="css/estilos.css">
+    <link rel="stylesheet" href="css/create-post-styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+    <div class="contenedor_principal">
+        
+        <aside class="barra_lateral_izquierda">
+            <div class="logo_app">
+                <img src="img/avatar_placeholder.png" alt="Logo" style="width: 50px; border-radius: 5px;">
+            </div>
+            
+            <nav class="menu_navegacion">
+                <a href="index.html" class="item_menu">
+                    <i class="fa-solid fa-house"></i> Inicio
+                </a>
+                <div class="separador_menu"></div>
+                <a href="#" class="item_menu activo">
+                    <i class="fa-solid fa-pen-to-square"></i> Crear Post
+                </a>
+                <a href="#" class="item_menu">
+                    <i class="fa-solid fa-users"></i> Grupos Suscritos
+                </a>
+            </nav>
+        </aside>
+
+        <main class="columna_central">
+            <div class="create-post-container">
+                <div class="create-post-header">
+                    <h2 id="post-form-title">Crear Nuevo Post</h2>
+                    <p>Comparte tus pensamientos o conéctate con profesionales.</p>
+                </div>
+                
+                <div class="post-form">
+                    <div class="form-section">
+                        <label for="post-content" class="form-label">Contenido del Post</label>
+                        <textarea id="post-content" class="form-textarea" placeholder="¿Qué tienes en mente?" rows="8"></textarea>
+                    </div>
+
+                    <div class="form-section">
+                        <label class="form-label">Añadir Imagen (Opcional)</label>
+                        <div class="image-upload-area" id="image-upload-area">
+                            <input type="file" id="post-image-input" accept="image/*" hidden>
+                            <div id="image-preview-container" class="image-preview-container">
+                                <i class="fa-solid fa-image"></i>
+                                <p>Haz clic para subir una imagen</p>
+                            </div>
+                        </div>
+                        <img id="image-preview" class="image-preview hidden" src="#" alt="Previsualización de imagen">
+                    </div>
+
+                    <div class="form-section">
+                        <label class="form-label">Tipo de Publicación</label>
+                        <div class="toggle-switch-container">
+                            <span class="toggle-label">Social</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="post-type-toggle">
+                                <span class="slider round"></span>
+                            </label>
+                            <span class="toggle-label">Networking</span>
+                        </div>
+                    </div>
+
+                    <div class="post-actions">
+                        <button class="boton_publicar" id="publish-post-btn">
+                            <i class="fa-solid fa-paper-plane"></i> Publicar Post
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <aside class="barra_lateral_derecha">
+            <div class="header_perfil">
+                <div id="info-usuario-logueado" class="info_usuario_top">
+                    <img src="img/avatar_placeholder.png" class="avatar_top">
+                    <div class="textos_top">
+                        <span class="nombre_top">Manuel</span>
+                        <span class="usuario_top">@manuel</span>
+                    </div>
+                </div>
+                <div class="contenedor_dropdown">
+                    <i class="fa-solid fa-chevron-down flecha_menu"></i>
+                </div>
+            </div>
+            <h3 class="titulo_seccion">Mis Borradores</h3>
+            <!-- Aquí podrían ir los borradores o posts pendientes -->
+        </aside>
+
+    </div>
+
+    <script src="js/create-post.js"></script>
+</body>
+</html>
