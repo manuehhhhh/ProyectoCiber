@@ -87,16 +87,39 @@
             </div>
             <div class="modal_body">
                 <input type="text" id="ev-nombre" placeholder="Título del Evento" class="input_modal">
-                <textarea id="ev-desc" rows="3" placeholder="Descripción" class="input_modal"></textarea>
+                <textarea id="ev-desc" rows="3" placeholder="Descripción del evento..." class="input_modal"></textarea>
                 <input type="text" id="ev-lugar" placeholder="Lugar (Ej: Aula Magna)" class="input_modal">
+                
+                <label style="font-size:0.85rem; font-weight:bold; color:#555;">Categoría:</label>
                 <select id="ev-categoria" class="input_modal">
-                    <option value="Conferencia">Conferencia</option>
-                    <option value="Taller">Taller</option>
-                    <option value="Competencia">Competencia</option>
-                </select>
-                <div style="display:flex; gap:10px;">
-                    <input type="date" id="ev-fecha" class="input_modal">
-                    <input type="time" id="ev-hora" class="input_modal">
+    <option value="Conferencia">Conferencia</option>
+    <option value="Taller">Taller</option>
+    <option value="Competencia">Competencia</option>
+    <option value="Webinar">Webinar</option>
+    <option value="Acto de grado">Acto de grado</option>
+    <option value="Encuentro de egresados">Encuentro de egresados</option>
+</select>
+
+                <div style="display:flex; gap:10px; align-items:center; margin-bottom:5px;">
+                    <div style="flex:1;">
+                        <label style="font-size:0.8rem; color:#666;">Fecha Inicio</label>
+                        <input type="date" id="ev-fecha-inicio" class="input_modal">
+                    </div>
+                    <div style="flex:1;">
+                        <label style="font-size:0.8rem; color:#666;">Hora Inicio</label>
+                        <input type="time" id="ev-hora-inicio" class="input_modal">
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <div style="flex:1;">
+                        <label style="font-size:0.8rem; color:#666;">Fecha Fin</label>
+                        <input type="date" id="ev-fecha-fin" class="input_modal">
+                    </div>
+                    <div style="flex:1;">
+                        <label style="font-size:0.8rem; color:#666;">Hora Fin</label>
+                        <input type="time" id="ev-hora-fin" class="input_modal">
+                    </div>
                 </div>
             </div>
             <div class="modal_footer">

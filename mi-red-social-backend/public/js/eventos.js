@@ -1,18 +1,17 @@
-// Variable global para guardar los eventos y poder filtrarlos sin recargar
+// Variable global para guardar los eventos
 let EVENTOS_GLOBALES = [];
 
 document.addEventListener('DOMContentLoaded', () => {
     cargarEventos();
     verificarPermisosCrear();
     gestionarInterfaz();
-    configurarBuscadorEventos(); // <--- NUEVA FUNCIÓN
+    configurarBuscadorEventos();
 });
 
-// 1. GESTIONAR INTERFAZ
+// --- GESTIÓN DE INTERFAZ Y BUSCADOR (Igual que antes) ---
 function gestionarInterfaz() {
     const params = new URLSearchParams(window.location.search);
     const esModoSuscritos = params.get('filtro') === 'suscritos';
-
     const linkSuscritos = document.getElementById('sidebar-eventos-suscritos');
     const barraBusqueda = document.getElementById('barra-busqueda-eventos');
     const barraPestanas = document.getElementById('barra-pestanas-eventos');
@@ -20,7 +19,7 @@ function gestionarInterfaz() {
 
     if (esModoSuscritos) {
         if(linkSuscritos) linkSuscritos.classList.add('activo');
-        if(barraBusqueda) barraBusqueda.style.display = 'none'; // Se oculta en modo suscritos
+        if(barraBusqueda) barraBusqueda.style.display = 'none';
         if(barraPestanas) barraPestanas.style.display = 'none';
         if(headerTitulo) headerTitulo.style.display = 'block';
     } else {
@@ -31,31 +30,23 @@ function gestionarInterfaz() {
     }
 }
 
-// 2. CONFIGURAR EL BUSCADOR (NUEVA LÓGICA)
 function configurarBuscadorEventos() {
-    // Buscamos el input dentro del contenedor específico de eventos
     const contenedor = document.getElementById('barra-busqueda-eventos');
     if (!contenedor) return;
-
     const input = contenedor.querySelector('input');
     
     input.addEventListener('input', (e) => {
         const texto = e.target.value.toLowerCase().trim();
-
-        // Filtramos la lista global
         const eventosFiltrados = EVENTOS_GLOBALES.filter(ev => {
-            // Puedes buscar por nombre, lugar o categoría
             return ev.nombre_evento.toLowerCase().includes(texto) || 
                    ev.lugar.toLowerCase().includes(texto) ||
                    ev.categoria.toLowerCase().includes(texto);
         });
-
-        // Volvemos a pintar solo los filtrados
         renderizarListaEventos(eventosFiltrados);
     });
 }
 
-// 3. CARGAR EVENTOS (SOLO DATOS)
+// --- CARGA DE EVENTOS ---
 async function cargarEventos() {
     const params = new URLSearchParams(window.location.search);
     const soloSuscritos = params.get('filtro') === 'suscritos';
@@ -64,23 +55,16 @@ async function cargarEventos() {
         const res = await fetch(`/api/eventos?id_usuario_actual=${ID_USUARIO_LOGUEADO}`);
         let eventos = await res.json();
 
-        if (soloSuscritos) {
-            eventos = eventos.filter(ev => ev.asisto === true);
-        }
+        if (soloSuscritos) eventos = eventos.filter(ev => ev.asisto === true);
 
-        // GUARDAMOS EN GLOBAL
         EVENTOS_GLOBALES = eventos;
-
-        // LLAMAMOS AL RENDERIZADOR
         renderizarListaEventos(EVENTOS_GLOBALES);
-
     } catch (error) {
         console.error(error);
         document.getElementById('lista-eventos').innerHTML = '<p>Error al cargar.</p>';
     }
 }
 
-// 4. RENDERIZAR LISTA (HTML SEPARADO)
 function renderizarListaEventos(listaDeEventos) {
     const contenedor = document.getElementById('lista-eventos');
     const params = new URLSearchParams(window.location.search);
@@ -89,9 +73,7 @@ function renderizarListaEventos(listaDeEventos) {
     contenedor.innerHTML = '';
 
     if (listaDeEventos.length === 0) {
-        // Mensaje diferente si es porque no hay datos o porque la búsqueda no trajo nada
         const esBusqueda = document.querySelector('#barra-busqueda-eventos input').value.trim().length > 0;
-        
         let mensaje = soloSuscritos ? 'No estás suscrito a ningún evento.' : 'No hay eventos próximos.';
         if (esBusqueda) mensaje = 'No se encontraron eventos con ese nombre.';
 
@@ -107,7 +89,6 @@ function renderizarListaEventos(listaDeEventos) {
     listaDeEventos.forEach(ev => {
         const fecha = new Date(ev.fecha_inicio).toLocaleDateString();
         const horaSimple = ev.hora_inicio ? ev.hora_inicio.substring(0, 5) : '00:00';
-        
         const iconoBook = ev.asisto ? 'fa-solid' : 'fa-regular';
         const claseActiva = ev.asisto ? 'suscrito_activo' : '';
         const tooltip = ev.asisto ? 'Cancelar inscripción' : 'Inscribirse';
@@ -153,7 +134,7 @@ function renderizarListaEventos(listaDeEventos) {
     });
 }
 
-// 5. TOGGLE SUSCRIPCIÓN
+// --- ACCIONES (Suscripción y Detalles) ---
 async function toggleSuscripcion(idEvento) {
     try {
         const res = await fetch('/api/eventos/suscribirse', {
@@ -169,7 +150,6 @@ async function toggleSuscripcion(idEvento) {
     } catch (e) { console.error(e); }
 }
 
-// 6. VER DETALLE COMPLETO
 function verDetalleCompleto(ev) {
     const modal = document.getElementById('modal-detalle-evento');
     const titulo = document.getElementById('det-titulo');
@@ -185,7 +165,11 @@ function verDetalleCompleto(ev) {
     const hFin = ev.hora_fin ? ev.hora_fin.substring(0, 5) : '??:??';
 
     let htmlFecha = '';
-    if (fInicio.toDateString() === fFin.toDateString()) {
+    // Corregimos comparación de fechas usando timestamps de día (sin horas)
+    const inicioDia = new Date(fInicio.toDateString());
+    const finDia = new Date(fFin.toDateString());
+
+    if (inicioDia.getTime() === finDia.getTime()) {
         htmlFecha = `
             <div class="detalle_dato">
                 <i class="fa-solid fa-calendar-day icono_detalle"></i>
@@ -225,10 +209,9 @@ function verDetalleCompleto(ev) {
         </div>
 
         <div class="separador_modal"></div>
-
         <h3 style="color:var(--azul-principal); margin-bottom:10px;">Descripción</h3>
         <p style="line-height:1.6; color:#444;">
-            ${ev.descripcion_evento || "No hay descripción disponible para este evento."}
+            ${ev.descripcion_evento || "No hay descripción disponible."}
         </p>
     `;
 
@@ -244,17 +227,35 @@ function verDetalleCompleto(ev) {
     modal.classList.remove('oculto');
 }
 
-async function toggleSuscripcionDesdeModal(id) {
-    await toggleSuscripcion(id);
+async function toggleSuscripcionDesdeModal(id) { await toggleSuscripcion(id); }
+
+// --- CREACIÓN DE EVENTOS (VALIDACIONES Y LIMPIEZA) ---
+
+function limpiarFormularioCrear() {
+    document.getElementById('ev-nombre').value = '';
+    document.getElementById('ev-desc').value = '';
+    document.getElementById('ev-lugar').value = '';
+    document.getElementById('ev-categoria').selectedIndex = 0;
+    
+    document.getElementById('ev-fecha-inicio').value = '';
+    document.getElementById('ev-hora-inicio').value = '';
+    document.getElementById('ev-fecha-fin').value = '';
+    document.getElementById('ev-hora-fin').value = '';
 }
 
-// 7. PERMISOS Y MODALES
+function abrirModalCrearEvento() {
+    limpiarFormularioCrear(); // <--- LIMPIAR SIEMPRE AL ABRIR
+    document.getElementById('modal-crear-evento').classList.remove('oculto');
+}
+
+function cerrarModal(id) { document.getElementById(id).classList.add('oculto'); }
+
 async function verificarPermisosCrear() {
     try {
         const res = await fetch(`/api/profile/${ID_USUARIO_LOGUEADO}`);
         const datos = await res.json();
         const btnCrear = document.getElementById('btn-crear-evento-container');
-        
+        // Solo mostrar si NO es Estudiante/Profesor (es decir, Dependencia u Org)
         if (datos.tipo === 'Estudiante' || datos.tipo === 'Profesor/Egresado') {
             if(btnCrear) btnCrear.style.display = 'none';
         } else {
@@ -263,24 +264,37 @@ async function verificarPermisosCrear() {
     } catch (e) {}
 }
 
-function abrirModalCrearEvento() {
-    document.getElementById('modal-crear-evento').classList.remove('oculto');
-}
-
-function cerrarModal(id) {
-    document.getElementById(id).classList.add('oculto');
-}
-
-// 8. GUARDAR EVENTO
 async function guardarEvento() {
     const nombre = document.getElementById('ev-nombre').value;
     const desc = document.getElementById('ev-desc').value;
     const lugar = document.getElementById('ev-lugar').value;
     const cat = document.getElementById('ev-categoria').value;
-    const fecha = document.getElementById('ev-fecha').value;
-    const hora = document.getElementById('ev-hora').value;
+    
+    const fechaInicio = document.getElementById('ev-fecha-inicio').value;
+    const horaInicio = document.getElementById('ev-hora-inicio').value;
+    const fechaFin = document.getElementById('ev-fecha-fin').value;
+    const horaFin = document.getElementById('ev-hora-fin').value;
 
-    if(!nombre || !fecha) return alert("Llena los campos obligatorios");
+    // 1. VALIDACIÓN: CAMPOS VACÍOS
+    if(!nombre || !fechaInicio || !horaInicio || !fechaFin || !horaFin) {
+        return alert("Por favor completa todos los campos de fecha y hora.");
+    }
+
+    // 2. VALIDACIÓN LÓGICA DE FECHAS
+    const now = new Date();
+    // Creamos objetos Date combinando fecha y hora para comparar con precisión
+    const startDateTime = new Date(`${fechaInicio}T${horaInicio}`);
+    const endDateTime = new Date(`${fechaFin}T${horaFin}`);
+
+    // A. ¿Fecha de inicio en el pasado?
+    if (startDateTime < now) {
+        return alert("Error: No puedes crear un evento en el pasado.");
+    }
+
+    // B. ¿Fecha fin antes que fecha inicio?
+    if (endDateTime <= startDateTime) {
+        return alert("Error: La fecha/hora de fin debe ser posterior a la de inicio.");
+    }
 
     try {
         const res = await fetch('/api/eventos/crear', {
@@ -289,16 +303,19 @@ async function guardarEvento() {
             body: JSON.stringify({
                 id_organizador: ID_USUARIO_LOGUEADO,
                 nombre, descripcion: desc, lugar, categoria: cat,
-                fecha_inicio: fecha, hora_inicio: hora
+                fecha_inicio: fechaInicio, hora_inicio: horaInicio,
+                fecha_fin: fechaFin, hora_fin: horaFin
             })
         });
 
         if (res.ok) {
             alert("¡Evento creado!");
             cerrarModal('modal-crear-evento');
+            limpiarFormularioCrear(); // Limpiar también al terminar
             cargarEventos();
         } else {
-            alert("Error al crear. Verifica tus permisos.");
+            const data = await res.json();
+            alert("Error al crear: " + (data.error || "Desconocido"));
         }
     } catch (e) { console.error(e); }
 }

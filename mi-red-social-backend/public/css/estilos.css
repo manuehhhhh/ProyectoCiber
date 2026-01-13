@@ -504,3 +504,12 @@ textarea {
     background-color: #eee;
     margin: 20px 0;
 }
+
+textarea.input_modal {
+    min-height: 100px;       /* Le damos una altura mínima obligatoria */
+    border: 1px solid #ccc;  /* Forzamos que tenga borde gris */
+    resize: vertical;        /* Permitimos que el usuario lo pueda estirar si quiere */
+    padding: 10px;           /* Espacio interno para que el texto no pegue al borde */
+    font-family: inherit;    /* Que use la misma letra que el resto */
+    display: block;          /* Asegura que ocupe su propia línea */
+}

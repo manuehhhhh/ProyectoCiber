@@ -4,7 +4,7 @@
  * Versión: Incluye Perfil, Amistad, Comentarios y SUBIDA DE IMÁGENES.
  */
 
-const ID_USUARIO_LOGUEADO = 2; 
+const ID_USUARIO_LOGUEADO = 45; 
 let ID_POST_ACTUAL_EN_MODAL = null;
 let archivoPostSeleccionado = null; // Variable global para la imagen del post
 
