@@ -5,11 +5,10 @@ const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
 
-// 1. Importamos la conexión de Sequelize (ya no usamos ./db)
+// 1. Importamos la conexión de Sequelize
 const db = require('./models'); 
 
-// 2. Importamos el archivo de rutas (src/routes/index.js)
-// Node busca automáticamente el archivo "index.js" dentro de la carpeta routes
+// 2. Importamos el archivo de rutas
 const routes = require('./routes'); 
 
 // Inicializaciones
@@ -22,14 +21,17 @@ app.use(cors());
 app.use(express.json());
 
 // 3. CONECTAMOS LAS RUTAS
-// Aquí le decimos: "Todo lo que llegue a /api, manéjalo con el archivo routes"
 app.use('/api', routes);
 
-// Archivos Estáticos (Tu frontend)
+// 4. ARCHIVOS ESTÁTICOS (Imágenes y Frontend)
+// Esta línea sirve tu frontend (HTML, CSS, JS del public)
 app.use(express.static(path.join(__dirname, '../public')));
 
-// 4. Sincronizar Base de Datos y Arrancar
-// force: false asegura que NO se borren tus datos al reiniciar
+// NUEVO: Esta línea hace pública la carpeta de imágenes subidas
+// Permite entrar a: localhost:3000/uploads/perfiles/foto.jpg
+app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
+
+// 5. Sincronizar Base de Datos y Arrancar
 db.sequelize.sync({ force: false }).then(() => {
     console.log("✅ Tablas sincronizadas con Sequelize");
     app.listen(PORT, () => {

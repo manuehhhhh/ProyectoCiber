@@ -463,3 +463,109 @@ textarea {
     position: relative; 
     top: 0px; /* Asegura que toque la línea */
 }
+
+/* === BOTÓN SEGUIR === */
+.btn_accion_perfil {
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    outline: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Estado: NO LO SIGO (Botón Azul Llamativo) */
+.btn_seguir {
+    background-color: var(--azul-principal); /* #4fc1e9 */
+    color: white;
+}
+.btn_seguir:hover {
+    background-color: #3aaad1; /* Azul más oscuro */
+    transform: scale(1.05); /* Pequeño zoom */
+}
+
+/* Estado: SIGUIENDO (Botón Blanco con Borde) */
+.btn_siguiendo {
+    background-color: white;
+    color: #333;
+    border: 1px solid #ccc;
+}
+.btn_siguiendo:hover {
+    background-color: #ffebeb; /* Rojo muy claro (Indica que puedes dejar de seguir) */
+    color: #d9534f;
+    border-color: #d9534f;
+    content: "Dejar de seguir"; /* Truco avanzado de CSS (opcional) */
+}
+
+/* Estado: AMIGOS (Botón Verde o Especial) */
+.btn_amigo {
+    background-color: #e6fcf5;
+    color: #0ca678;
+    border: 1px solid #0ca678;
+}
+.btn_amigo:hover {
+    background-color: #c3fae8;
+}
+/* === BUSCADOR DESPLEGABLE === */
+.contenedor_busqueda {
+    position: relative; /* Importante para que el dropdown se pegue aquí */
+}
+
+.dropdown_resultados {
+    position: absolute;
+    top: 100%; /* Justo debajo del input */
+    left: 0;
+    width: 100%;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    z-index: 1000; /* Para que flote sobre todo */
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.item_resultado {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+    transition: background 0.2s;
+}
+
+.item_resultado:hover {
+    background-color: #f5f8fa;
+}
+
+.item_resultado:last-child {
+    border-bottom: none;
+}
+
+.avatar_resultado {
+    width: 35px; height: 35px;
+    border-radius: 50%;
+    margin-right: 10px;
+    object-fit: cover;
+}
+
+.info_resultado {
+    display: flex;
+    flex-direction: column;
+}
+
+.nombre_resultado {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.usuario_resultado {
+    font-size: 0.8rem;
+    color: #777;
+}

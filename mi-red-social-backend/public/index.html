@@ -33,7 +33,10 @@
             
             <div class="contenedor_busqueda">
                 <i class="fa-solid fa-magnifying-glass icono_busqueda"></i>
-                <input type="text" class="input_busqueda" placeholder="Buscar">
+                
+                <input type="text" id="input-busqueda-global" class="input_busqueda" placeholder="Buscar..." autocomplete="off">
+                
+                <div id="lista-resultados-busqueda" class="dropdown_resultados oculto"></div>
             </div>
 
             <div class="caja_crear_publicacion">
@@ -45,8 +48,16 @@
                         <i class="fa-regular fa-circle-user icono_usuario_post"></i>
                         <textarea id="txt-publicacion" rows="2" placeholder="Comparte tus ideas"></textarea>
                     </div>
+                    
                     <div class="pie_publicar">
-                        <i class="fa-regular fa-image icono_camara"></i>
+                        <i class="fa-regular fa-image icono_camara" id="btn-select-imagen-post" style="cursor: pointer;"></i>
+                        <input type="file" id="input-imagen-post" accept="image/*" style="display: none;">
+                        
+                        <div id="preview-imagen-post" style="display: none; margin-left: 10px; align-items: center;">
+                            <img src="" style="max-height: 40px; border-radius: 4px;">
+                            <i class="fa-solid fa-xmark" id="btn-borrar-preview" style="cursor:pointer; color:red; margin-left:5px;" title="Quitar imagen"></i>
+                        </div>
+
                         <div class="acciones_derecha">
                             <span id="contador-caracteres" class="contador">200</span>
                             <button class="boton_publicar">Publicar</button>
@@ -89,28 +100,24 @@
         </aside>
 
     </div>
-<div id="modal-comentarios" class="modal_overlay oculto">
+
+    <div id="modal-comentarios" class="modal_overlay oculto">
         <div class="modal_contenido">
-            
             <div class="modal_header">
                 <h3>Comentarios</h3>
                 <button id="btn-cerrar-modal" class="btn_cerrar">&times;</button>
             </div>
-
             <div id="lista-comentarios-modal" class="modal_body">
                 <p class="cargando-texto">Cargando...</p>
             </div>
-
             <div class="modal_footer">
-    <input type="text" id="input-nuevo-comentario" placeholder="Escribe un comentario..." autocomplete="off">
-    
-    <span id="contador-comentario" style="color: #4fc1e9; font-weight: bold; font-size: 0.8rem; margin-right: 10px;">200</span>
-    
-    <button id="btn-enviar-comentario" class="boton_publicar">Enviar</button>
-</div>
-            
+                <input type="text" id="input-nuevo-comentario" placeholder="Escribe un comentario..." autocomplete="off">
+                <span id="contador-comentario" style="color: #4fc1e9; font-weight: bold; font-size: 0.8rem; margin-right: 10px;">200</span>
+                <button id="btn-enviar-comentario" class="boton_publicar">Enviar</button>
+            </div>
         </div>
     </div>
+
     <script src="js/main.js"></script>
 </body>
 </html>
