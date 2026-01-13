@@ -4,39 +4,25 @@ document.addEventListener('DOMContentLoaded', () => {
     gestionarInterfaz();
 });
 
-// 1. GESTIONAR INTERFAZ (Barra lateral y elementos superiores)
+// 1. GESTIONAR INTERFAZ
 function gestionarInterfaz() {
     const params = new URLSearchParams(window.location.search);
     const esModoSuscritos = params.get('filtro') === 'suscritos';
 
-    // Elementos del DOM
     const linkSuscritos = document.getElementById('sidebar-eventos-suscritos');
     const barraBusqueda = document.getElementById('barra-busqueda-eventos');
     const barraPestanas = document.getElementById('barra-pestanas-eventos');
     const headerTitulo = document.getElementById('header-titulo-suscritos');
 
     if (esModoSuscritos) {
-        // --- MODO SUSCRITOS ---
-        // 1. Activar sidebar
         if(linkSuscritos) linkSuscritos.classList.add('activo');
-        
-        // 2. Ocultar barras superiores
         if(barraBusqueda) barraBusqueda.style.display = 'none';
         if(barraPestanas) barraPestanas.style.display = 'none';
-        
-        // 3. Mostrar título simple
         if(headerTitulo) headerTitulo.style.display = 'block';
-
     } else {
-        // --- MODO GENERAL ---
-        // 1. Desactivar sidebar
         if(linkSuscritos) linkSuscritos.classList.remove('activo');
-        
-        // 2. Mostrar barras superiores
         if(barraBusqueda) barraBusqueda.style.display = 'flex';
         if(barraPestanas) barraPestanas.style.display = 'flex';
-        
-        // 3. Ocultar título simple
         if(headerTitulo) headerTitulo.style.display = 'none';
     }
 }
@@ -51,7 +37,6 @@ async function cargarEventos() {
         const res = await fetch(`/api/eventos?id_usuario_actual=${ID_USUARIO_LOGUEADO}`);
         let eventos = await res.json();
 
-        // Filtramos si es necesario
         if (soloSuscritos) {
             eventos = eventos.filter(ev => ev.asisto === true);
         }
@@ -67,16 +52,15 @@ async function cargarEventos() {
             return;
         }
 
-        // Renderizar Tarjetas
         eventos.forEach(ev => {
             const fecha = new Date(ev.fecha_inicio).toLocaleDateString();
+            // CORRECCIÓN: Cortar segundos (HH:mm:ss -> HH:mm)
+            const horaSimple = ev.hora_inicio ? ev.hora_inicio.substring(0, 5) : '00:00';
             
-            // Lógica del Marcador (Banderín)
             const iconoBook = ev.asisto ? 'fa-solid' : 'fa-regular';
             const claseActiva = ev.asisto ? 'suscrito_activo' : '';
             const tooltip = ev.asisto ? 'Cancelar inscripción' : 'Inscribirse';
 
-            // Icono de categoría
             let iconoCat = "fa-calendar-day";
             if (ev.categoria === 'Taller') iconoCat = "fa-laptop-code";
             if (ev.categoria === 'Conferencia') iconoCat = "fa-microphone";
@@ -94,7 +78,7 @@ async function cargarEventos() {
                                 <span class="usuario">${ev.nombre_organizador}</span>
                             </div>
                         </div>
-                        <span class="tiempo">📅 ${fecha} • ${ev.hora_inicio}</span>
+                        <span class="tiempo">📅 ${fecha} • ${horaSimple}</span>
                     </div>
 
                     <div class="contenido_post">
@@ -107,12 +91,7 @@ async function cargarEventos() {
                             <div class="accion_social" onclick="toggleSuscripcion(${ev.id_evento})" title="${tooltip}">
                                 <i class="${iconoBook} fa-bookmark ${claseActiva} icono_suscripcion"></i>
                             </div>
-                            
-                            <div class="accion_social">
-                                <i class="fa-regular fa-comment"></i>
-                            </div>
                         </div>
-
                         <div style="font-size: 0.85rem; color:#777;">
                             ${ev.total_asistentes} asistentes
                         </div>
@@ -138,14 +117,13 @@ async function toggleSuscripcion(idEvento) {
         });
         
         if (res.ok) {
-            cargarEventos(); // Recargamos para actualizar iconos y contadores
-            // Si el modal está abierto, lo cerramos para evitar desincronización
+            cargarEventos(); 
             document.getElementById('modal-detalle-evento').classList.add('oculto');
         }
     } catch (e) { console.error(e); }
 }
 
-// 4. VER DETALLE COMPLETO (MODAL)
+// 4. VER DETALLE COMPLETO (MEJORADO CON COLORES Y HORARIOS)
 function verDetalleCompleto(ev) {
     const modal = document.getElementById('modal-detalle-evento');
     const titulo = document.getElementById('det-titulo');
@@ -154,41 +132,69 @@ function verDetalleCompleto(ev) {
 
     titulo.innerText = ev.nombre_evento;
     
-    // Formateo de fecha largo
-    const fecha = new Date(ev.fecha_inicio).toLocaleDateString("es-ES", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    // FORMATO DE FECHAS
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    const fInicio = new Date(ev.fecha_inicio);
+    const fFin = new Date(ev.fecha_fin);
+    
+    // FORMATO DE HORAS (HH:mm)
+    const hInicio = ev.hora_inicio ? ev.hora_inicio.substring(0, 5) : '??:??';
+    const hFin = ev.hora_fin ? ev.hora_fin.substring(0, 5) : '??:??';
 
-    // Estado del botón en el modal
+    // LÓGICA: ¿Es el mismo día?
+    let htmlFecha = '';
+    // Truco simple para comparar fechas sin horas
+    if (fInicio.toDateString() === fFin.toDateString()) {
+        // Mismo día
+        htmlFecha = `
+            <div class="detalle_dato">
+                <i class="fa-solid fa-calendar-day icono_detalle"></i>
+                <div>
+                    <strong>Fecha:</strong> ${fInicio.toLocaleDateString("es-ES", options)} <br>
+                    <span style="color:#666; font-size:0.9rem;">De ${hInicio} a ${hFin}</span>
+                </div>
+            </div>`;
+    } else {
+        // Días diferentes
+        htmlFecha = `
+            <div class="detalle_dato">
+                <i class="fa-solid fa-calendar-week icono_detalle"></i>
+                <div>
+                    <strong>Inicio:</strong> ${fInicio.toLocaleDateString("es-ES", options)} (${hInicio}) <br>
+                    <strong>Fin:</strong> ${fFin.toLocaleDateString("es-ES", options)} (${hFin})
+                </div>
+            </div>`;
+    }
+
     const textoBtn = ev.asisto ? "Cancelar Inscripción" : "Inscribirse";
-    // Usamos boton_gris si ya asisto (para cancelar), sino el azul normal
     const claseBtn = ev.asisto ? "boton_gris" : "boton_publicar"; 
     
-    // Contenido del Modal
+    // ESTRUCTURA DEL MODAL CON COLOR
     body.innerHTML = `
-        <div class="detalle_meta_info">
-            <span><i class="fa-solid fa-calendar"></i> ${fecha}</span>
-            <span><i class="fa-solid fa-clock"></i> ${ev.hora_inicio}</span>
-            <span><i class="fa-solid fa-location-dot"></i> ${ev.lugar}</span>
+        <div class="detalle_cabecera_color">
+            <span class="badge_modal">${ev.categoria}</span>
+            <span class="organizador_modal">Organizado por: ${ev.nombre_organizador}</span>
         </div>
 
-        <div style="margin-bottom: 20px;">
-            <span style="background:#eee; padding:5px 10px; border-radius:15px; font-size:0.8rem; font-weight:bold;">
-                ${ev.categoria}
-            </span>
-            <span style="margin-left:10px; color:#666;">Organizado por: ${ev.nombre_organizador}</span>
+        <div class="contenedor_info_evento">
+            ${htmlFecha}
+            
+            <div class="detalle_dato">
+                <i class="fa-solid fa-location-dot icono_detalle"></i>
+                <div>
+                    <strong>Lugar:</strong> ${ev.lugar}
+                </div>
+            </div>
         </div>
 
-        <h3>Descripción</h3>
-        <p style="line-height:1.6; color:#333; margin-bottom:20px;">
+        <div class="separador_modal"></div>
+
+        <h3 style="color:var(--azul-principal); margin-bottom:10px;">Descripción</h3>
+        <p style="line-height:1.6; color:#444;">
             ${ev.descripcion_evento || "No hay descripción disponible para este evento."}
         </p>
-
-        <hr style="border:0; border-top:1px solid #eee; margin: 20px 0;">
-        
-        <h4>Comentarios</h4>
-        <p style="color:#999; font-style:italic;">Funcionalidad de comentarios en construcción...</p>
     `;
 
-    // Botón de acción dentro del modal
     footer.innerHTML = `
         <div style="color:#666; font-size:0.9rem;">
             <i class="fa-solid fa-users"></i> ${ev.total_asistentes} personas asistirán
@@ -212,11 +218,10 @@ async function verificarPermisosCrear() {
         const datos = await res.json();
         const btnCrear = document.getElementById('btn-crear-evento-container');
         
-        // Ocultar si es Estudiante o Profesor
         if (datos.tipo === 'Estudiante' || datos.tipo === 'Profesor/Egresado') {
             if(btnCrear) btnCrear.style.display = 'none';
         } else {
-            if(btnCrear) btnCrear.style.display = 'block'; // Dependencias/Orgs
+            if(btnCrear) btnCrear.style.display = 'block';
         }
     } catch (e) {}
 }
