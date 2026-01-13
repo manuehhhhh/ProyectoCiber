@@ -4,7 +4,7 @@ const router = express.Router();
 // 1. Importación de Modelos y Middleware
 const models = require('../models');
 const { authenticate } = require('../middleware/auth');
-const upload = require('../config/uploadConfig'); // <--- Importante para las fotos
+const upload = require('../config/uploadConfig'); 
 
 // 2. Importación de Controladores
 const createCRUDController = require('../controllers/genericController');

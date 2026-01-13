@@ -1,4 +1,3 @@
-// src/index.js
 const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
@@ -20,16 +19,22 @@ app.use(morgan('dev'));
 app.use(cors());
 app.use(express.json());
 
-// 3. CONECTAMOS LAS RUTAS
+// IMPORTANTE: Esto ayuda a procesar datos de formularios simples (no multipart)
+app.use(express.urlencoded({ extended: true })); 
+
+// 3. CONECTAMOS LAS RUTAS DE LA API
 app.use('/api', routes);
 
-// 4. ARCHIVOS ESTÁTICOS (Imágenes y Frontend)
-// Esta línea sirve tu frontend (HTML, CSS, JS del public)
+// =======================================================================
+// 4. ARCHIVOS ESTÁTICOS (CORREGIDO) 🔧
+// =======================================================================
+// Esta única línea es suficiente. Le dice a Express:
+// "Todo lo que esté dentro de la carpeta 'public', sírvelo tal cual".
+// Como tu carpeta 'uploads' está DENTRO de 'public', esto funciona automáticamente.
 app.use(express.static(path.join(__dirname, '../public')));
 
-// NUEVO: Esta línea hace pública la carpeta de imágenes subidas
-// Permite entrar a: localhost:3000/uploads/perfiles/foto.jpg
-app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
+// (He eliminado la línea extra de '/uploads' para evitar conflictos de rutas)
+// =======================================================================
 
 // 5. Sincronizar Base de Datos y Arrancar
 db.sequelize.sync({ force: false }).then(() => {

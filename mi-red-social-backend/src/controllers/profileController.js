@@ -19,7 +19,9 @@ async function obtenerDatosBasicos(id) {
             const o = await OrganizacionAsociada.findOne({ where: { id_miembro: id } });
             if (o) nombre = o.nombre_organizacion;
         }
-        return { id, nombre, handle, foto: miembro.foto_perfil };
+        // Nota: Aquí devolvemos 'foto' para la lista de seguidos, 
+        // pero el frontend en esa sección lo maneja bien.
+        return { id, nombre, handle, foto: miembro.foto_perfil }; 
     } catch (e) { return null; }
 }
 
@@ -36,7 +38,11 @@ module.exports = {
                 nombre: "Usuario", 
                 tipo: "Miembro", 
                 carrera: null, // Solo se llenará si es estudiante
-                handle: miembro.nombre_usuario 
+                handle: miembro.nombre_usuario,
+                // =======================================================
+                // CORRECCIÓN: AGREGAMOS LA FOTO AL OBJETO PRINCIPAL
+                // =======================================================
+                foto_perfil: miembro.foto_perfil 
             };
 
             // 2. DETERMINAR TIPO Y NOMBRE REAL
@@ -55,7 +61,7 @@ module.exports = {
                         if (carrera) datos.carrera = carrera.nombre_carrera;
                     }
                 } else {
-                    datos.tipo = "Profesor/Egresado"; // O puedes chequear las otras tablas si las tienes
+                    datos.tipo = "Profesor/Egresado"; 
                 }
 
             } else if (miembro.tipo_miembro === 'D') {
@@ -102,7 +108,7 @@ module.exports = {
             res.json({ 
                 ...datos, 
                 stats: { seguidores: countSeguidores, seguidos: countSeguidos }, 
-                listaSeguidos, // Array con los perfiles seguidos
+                listaSeguidos, 
                 posts 
             });
 

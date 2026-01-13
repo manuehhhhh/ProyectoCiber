@@ -86,8 +86,11 @@ async function irAlPerfil(idUsuario) {
         // 3. BADGE CARRERA
         let htmlCarrera = datos.carrera ? `<span class="badge naranja">${datos.carrera}</span>` : '';
 
-        // 4. AVATAR (Con lógica de edición si es mi perfil)
-        const avatarUrl = datos.foto ? datos.foto : 'img/avatar_placeholder.png';
+        // ============================================================
+        // 4. AVATAR (CORREGIDO: Usamos datos.foto_perfil)
+        // ============================================================
+        // Antes decía datos.foto, pero la base de datos manda datos.foto_perfil
+        const avatarUrl = datos.foto_perfil ? datos.foto_perfil : 'img/avatar_placeholder.png';
         
         // 5. HTML COMPLETO
         const htmlPerfil = `
@@ -360,8 +363,8 @@ async function crearHTMLTarjetaPost(post, autorPredefinido = null) {
     let htmlImagenPost = '';
     if (post.contenido_multimedia_post) {
         htmlImagenPost = `
-            <div class="contenedor_multimedia_post" style="margin-top: 10px; margin-bottom: 10px;">
-                <img src="${post.contenido_multimedia_post}" style="width: 100%; border-radius: 10px; border: 1px solid #eee;">
+            <div class="contenedor_multimedia_post">
+                <img src="${post.contenido_multimedia_post}" class="imagen_post_feed">
             </div>
         `;
     }

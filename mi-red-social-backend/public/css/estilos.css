@@ -20,43 +20,77 @@ body { background-color: #fff; height: 100vh; overflow: hidden; }
     background-color: var(--azul-lateral); color: white; padding: 20px;
     display: flex; flex-direction: column; align-items: center;
 }
-.logo_app { margin-bottom: 40px; }
+.logo_app { 
+    margin-bottom: 40px; 
+    text-align: center; /* Centrar el logo horizontalmente */
+    width: 100%;
+}
+
+.imagen_logo_sidebar {
+    width: 120px; /* Ajusta este número según qué tan grande quieras el logo */
+    max-width: 80%; /* Para que nunca se salga de la barra */
+    height: auto;   /* Mantiene la proporción para no estirarse */
+    display: block;
+    margin: 0 auto; /* Asegura el centrado */
+}
 .menu_navegacion { width: 100%; display: flex; flex-direction: column; gap: 10px; }
 .item_menu {
     color: white; text-decoration: none; padding: 10px 15px; border-radius: 8px;
     font-weight: 500; display: flex; align-items: center; gap: 10px;
-    transition: background-color 0.3s ease; /* Transición suave */
+    transition: background-color 0.3s ease;
 }
-/* Efecto Hover en Menú */
 .item_menu:hover { background-color: rgba(255,255,255,0.2); cursor: pointer; }
 .item_menu.activo { background-color: rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.3); }
 
 /* === CENTRO === */
 .columna_central { padding: 20px 40px; overflow-y: auto; border-right: 1px solid var(--gris-borde); }
 
-/* Buscador */
+/* === BUSCADOR (CORREGIDO) === */
 .contenedor_busqueda {
+    position: relative; /* Necesario para que el dropdown se pegue aquí */
     border: 1px solid var(--azul-principal); border-radius: 20px; padding: 8px 15px;
     display: flex; align-items: center; gap: 10px; margin-bottom: 20px;
 }
 .input_busqueda { border: none; outline: none; width: 100%; font-size: 0.95rem; }
 .icono_busqueda { color: var(--texto-gris); }
 
-/* Caja Publicar */
-.caja_crear_publicacion {
-    border: 1px solid var(--gris-borde); border-radius: 8px; overflow: hidden; margin-bottom: 15px;
+/* ESTA ES LA PARTE IMPORTANTE PARA QUE SE VEA LA LISTA */
+.dropdown_resultados {
+    position: absolute;
+    top: 100%; /* Justo debajo del input */
+    left: 0;
+    width: 100%;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 0 0 8px 8px;
+    /* Sombra más fuerte y z-index altísimo para que nada lo tape */
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    z-index: 9999; 
+    max-height: 300px;
+    overflow-y: auto;
 }
+
+.item_resultado {
+    display: flex; align-items: center; padding: 10px; cursor: pointer;
+    border-bottom: 1px solid #eee; transition: background 0.2s;
+}
+.item_resultado:hover { background-color: #f5f8fa; }
+.item_resultado:last-child { border-bottom: none; }
+.avatar_resultado { width: 35px; height: 35px; border-radius: 50%; margin-right: 10px; object-fit: cover; }
+.info_resultado { display: flex; flex-direction: column; }
+.nombre_resultado { font-size: 0.9rem; font-weight: bold; color: #333; }
+.usuario_resultado { font-size: 0.8rem; color: #777; }
+/* ========================= */
+
+/* Caja Publicar */
+.caja_crear_publicacion { border: 1px solid var(--gris-borde); border-radius: 8px; overflow: hidden; margin-bottom: 15px; }
 .cabecera_azul { background-color: var(--azul-principal); color: white; padding: 10px 15px; font-weight: bold; font-size: 0.9rem; }
 .cuerpo_publicar { padding: 15px; }
 .input_con_icono { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 15px; }
-/* Textarea estilizado para parecer input pero multilinea */
-textarea {
-    border: none; outline: none; width: 100%; color: var(--texto-oscuro);
-    resize: none; font-family: inherit; font-size: 0.95rem;
-}
+textarea { border: none; outline: none; width: 100%; color: var(--texto-oscuro); resize: none; font-family: inherit; font-size: 0.95rem; }
 .pie_publicar { display: flex; justify-content: space-between; align-items: center; }
 .icono_camara { font-size: 1.2rem; cursor: pointer; color: var(--azul-principal); transition: 0.2s; }
-.icono_camara:hover { transform: scale(1.1); } /* Efecto zoom ligero */
+.icono_camara:hover { transform: scale(1.1); }
 .acciones_derecha { display: flex; align-items: center; gap: 15px; }
 .contador { color: var(--azul-principal); font-weight: bold; font-size: 0.9rem; }
 .boton_publicar {
@@ -64,30 +98,18 @@ textarea {
     padding: 8px 20px; border-radius: 20px; font-weight: bold; cursor: pointer;
     transition: background-color 0.3s ease, transform 0.1s;
 }
-/* Efecto Hover en Botón Publicar */
 .boton_publicar:hover { background-color: var(--azul-oscuro); }
 .boton_publicar:active { transform: scale(0.98); }
 
-/* Pestañas (Tabs) Mejoradas */
-.barra_pestanas {
-    display: flex; gap: 5px; margin-bottom: 20px; border-bottom: 2px solid var(--azul-principal);
-    padding-left: 10px;
-}
+/* Pestañas (Tabs) */
+.barra_pestanas { display: flex; gap: 5px; margin-bottom: 20px; border-bottom: 2px solid var(--azul-principal); padding-left: 10px; }
 .pestana {
-    background-color: #eef8fc; /* Fondo azul muy clarito inactivo */
-    border: none; color: var(--azul-principal);
+    background-color: #eef8fc; border: none; color: var(--azul-principal);
     padding: 10px 20px; cursor: pointer; font-size: 0.9rem; font-weight: 600;
-    border-radius: 8px 8px 0 0; /* Solo bordes superiores redondeados */
-    transition: all 0.2s ease;
+    border-radius: 8px 8px 0 0; transition: all 0.2s ease;
 }
-.pestana:hover {
-    background-color: #d1effa; /* Hover suave */
-}
-.pestana.activo {
-    background-color: var(--azul-principal); color: white;
-    /* Un pequeño truco para que parezca conectada a la barra de abajo */
-    position: relative; top: 0px; 
-}
+.pestana:hover { background-color: #d1effa; }
+.pestana.activo { background-color: var(--azul-principal); color: white; position: relative; top: 0px; }
 
 /* Feed */
 .tarjeta_publicacion { border-bottom: 1px solid var(--gris-borde); padding: 20px 0; }
@@ -100,10 +122,7 @@ textarea {
 .tiempo { font-size: 0.8rem; color: var(--texto-gris); }
 .contenido_post { margin-bottom: 15px; color: var(--texto-oscuro); font-size: 0.95rem; line-height: 1.4; }
 .footer_post { display: flex; justify-content: flex-end; gap: 20px; }
-.accion_social {
-    color: var(--texto-gris); font-size: 0.9rem; cursor: pointer; display: flex; gap: 6px; align-items: center;
-    transition: color 0.2s;
-}
+.accion_social { color: var(--texto-gris); font-size: 0.9rem; cursor: pointer; display: flex; gap: 6px; align-items: center; transition: color 0.2s; }
 .accion_social:hover { color: var(--azul-principal); }
 
 /* === DERECHA === */
@@ -132,440 +151,133 @@ textarea {
 /* === MODAL DE COMENTARIOS === */
 .modal_overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background-color: rgba(0, 0, 0, 0.5); /* Fondo negro semitransparente */
-    display: flex; justify-content: center; align-items: center;
+    background-color: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center;
     z-index: 1000; opacity: 1; transition: opacity 0.3s;
 }
-
-.modal_overlay.oculto {
-    display: none; opacity: 0;
-}
-
+.modal_overlay.oculto { display: none; opacity: 0; }
 .modal_contenido {
     background-color: white; width: 500px; max-width: 90%; height: 600px;
     border-radius: 12px; display: flex; flex-direction: column;
     box-shadow: 0 10px 25px rgba(0,0,0,0.2); overflow: hidden;
 }
-
-.modal_header {
-    padding: 15px 20px; border-bottom: 1px solid var(--gris-borde);
-    display: flex; justify-content: space-between; align-items: center;
-    background-color: var(--gris-fondo);
-}
-.btn_cerrar {
-    background: none; border: none; font-size: 2rem; cursor: pointer; color: #888;
-}
+.modal_header { padding: 15px 20px; border-bottom: 1px solid var(--gris-borde); display: flex; justify-content: space-between; align-items: center; background-color: var(--gris-fondo); }
+.btn_cerrar { background: none; border: none; font-size: 2rem; cursor: pointer; color: #888; }
 .btn_cerrar:hover { color: #333; }
-
-.modal_body {
-    flex-grow: 1; overflow-y: auto; padding: 20px;
-    display: flex; flex-direction: column; gap: 15px;
-}
-
-.modal_footer {
-    padding: 15px; border-top: 1px solid var(--gris-borde);
-    display: flex; gap: 10px; background-color: white;
-}
-#input-nuevo-comentario {
-    flex-grow: 1; padding: 10px; border: 1px solid var(--gris-borde);
-    border-radius: 20px; outline: none;
-}
+.modal_body { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+.modal_footer { padding: 15px; border-top: 1px solid var(--gris-borde); display: flex; gap: 10px; background-color: white; align-items: center; }
+#input-nuevo-comentario { flex-grow: 1; padding: 10px; border: 1px solid var(--gris-borde); border-radius: 20px; outline: none; }
 #input-nuevo-comentario:focus { border-color: var(--azul-principal); }
 
-/* Estilo de un comentario individual */
-/* === ESTILOS DE COMENTARIOS MEJORADOS === */
-
-.bloque_comentario {
-    margin-bottom: 15px;
-    display: flex; /* Para alinear avatar y contenido */
-    gap: 10px;
-}
-
-.avatar_comentario {
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
-    object-fit: cover;
-    flex-shrink: 0; /* Que no se aplaste */
-    border: 1px solid #ddd;
-}
-
-/* Envoltorio para la burbuja y la fecha */
-.contenedor_burbuja {
-    display: flex;
-    flex-direction: column;
-    max-width: 85%;
-}
-
-.burbuja_comentario {
-    background-color: #f0f2f5;
-    padding: 10px 15px;
-    border-radius: 18px;
-    /* Truco para que la burbuja se vea bien incluso con poco texto */
-    display: flex;
-    flex-direction: column; 
-    align-items: flex-start;
-}
-
-/* Header dentro de la burbuja (Nombre y Usuario) */
-.header_comentario {
-    display: flex;
-    flex-direction: column; /* Uno debajo del otro */
-    margin-bottom: 5px;
-    line-height: 1.2;
-}
-
-.autor_comentario {
-    font-weight: bold;
-    font-size: 0.9rem;
-    color: #050505;
-}
-
-.usuario_comentario_modal {
-    font-size: 0.75rem;
-    color: #65676b;
-}
-
-.texto_comentario {
-    font-size: 0.95rem;
-    color: #050505;
-    word-break: break-word; /* Rompe palabras largas */
-    line-height: 1.4;
-    margin: 0;
-}
-
-.fecha_comentario {
-    font-size: 0.7rem;
-    color: #65676b;
-    margin-top: 3px;
-    margin-left: 10px; /* Un poco a la derecha para alinearse con la burbuja */
-}
-
-/* Ajuste del Footer del Modal */
-.modal_footer {
-    display: flex;
-    align-items: center; /* Centrar verticalmente */
-    gap: 10px;
-    padding: 15px;
-    border-top: 1px solid var(--gris-borde);
-}
+/* Estilos de Comentarios */
+.bloque_comentario { margin-bottom: 15px; display: flex; gap: 10px; }
+.avatar_comentario { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; flex-shrink: 0; border: 1px solid #ddd; }
+.contenedor_burbuja { display: flex; flex-direction: column; max-width: 85%; }
+.burbuja_comentario { background-color: #f0f2f5; padding: 10px 15px; border-radius: 18px; display: flex; flex-direction: column; align-items: flex-start; }
+.header_comentario { display: flex; flex-direction: column; margin-bottom: 5px; line-height: 1.2; }
+.autor_comentario { font-weight: bold; font-size: 0.9rem; color: #050505; }
+.usuario_comentario_modal { font-size: 0.75rem; color: #65676b; }
+.texto_comentario { font-size: 0.95rem; color: #050505; word-break: break-word; line-height: 1.4; margin: 0; }
+.fecha_comentario { font-size: 0.7rem; color: #65676b; margin-top: 3px; margin-left: 10px; }
 
 /* === PERFIL DE USUARIO === */
-
-/* Header del Perfil */
-.perfil_container {
-    background-color: white;
-    margin-bottom: 20px;
-    border-bottom: 1px solid var(--gris-borde);
-}
-
+.perfil_container { background-color: white; margin-bottom: 20px; border-bottom: 1px solid var(--gris-borde); }
 .perfil_banner {
-    height: 180px;
-    background-image: url('../img/banner_ucab.jpg'); /* Asegúrate de tener una imagen o usa un color */
-    background-color: #a0c4ff; /* Color de respaldo */
-    background-size: cover;
-    background-position: center;
-    position: relative;
+    height: 180px; background-color: #a0c4ff; background-image: url('../img/banner_ucab.jpg');
+    background-size: cover; background-position: center; position: relative;
 }
-
-.perfil_info_seccion {
-    padding: 0 30px 20px 30px;
-    position: relative;
-}
-
-.contenedor_avatar_perfil {
-    position: relative;
-    width: 140px;
-    height: 140px;
-    margin-top: -70px; /* Esto hace que suba y tape el banner */
-    margin-bottom: 15px;
-}
-
-.avatar_perfil_grande {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    border: 4px solid white;
-    object-fit: cover;
-    background-color: white;
-}
-
+.perfil_info_seccion { padding: 0 30px 20px 30px; position: relative; }
+.contenedor_avatar_perfil { position: relative; width: 140px; height: 140px; margin-top: -70px; margin-bottom: 15px; }
+.avatar_perfil_grande { width: 100%; height: 100%; border-radius: 50%; border: 4px solid white; object-fit: cover; background-color: white; }
 .icono_editar_foto {
-    position: absolute;
-    bottom: 10px;
-    right: 10px;
-    background-color: var(--azul-principal);
-    color: white;
-    width: 30px; height: 30px;
-    border-radius: 50%;
-    display: flex; justify-content: center; align-items: center;
+    position: absolute; bottom: 10px; right: 10px; background-color: var(--azul-principal); color: white;
+    width: 30px; height: 30px; border-radius: 50%; display: flex; justify-content: center; align-items: center;
     cursor: pointer; border: 2px solid white;
 }
-
-.fila_nombre_stats {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    flex-wrap: wrap;
-    gap: 20px;
-}
-
+.fila_nombre_stats { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px; }
 .nombres_perfil h2 { font-size: 1.4rem; font-weight: 800; color: #000; display: flex; align-items: center; gap: 10px; }
 .lapiz_editar { font-size: 0.9rem; color: #555; cursor: pointer; }
 .handle_perfil { color: #666; font-size: 0.95rem; margin-top: 2px; display: block; }
-
 .stats_perfil { display: flex; gap: 30px; }
 .stat_item { text-align: center; }
 .stat_numero { font-weight: 800; font-size: 1.1rem; display: block; color: #000; }
 .stat_label { font-size: 0.85rem; color: #666; }
-
 .badges_perfil { display: flex; gap: 10px; margin-top: 5px; }
-.badge {
-    padding: 5px 15px;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: bold;
-    color: #333;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
+.badge { padding: 5px 15px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; color: #333; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 .badge.amarillo { background-color: #ffc107; border: 1px solid #e0a800; }
 .badge.naranja { background-color: #fd7e14; color: white; border: 1px solid #e36d0d; }
 
-.bio_perfil {
-    margin-top: 15px;
-    font-size: 0.95rem;
-    color: #333;
-    line-height: 1.4;
-}
-
-.red_social_link {
-    display: inline-flex; align-items: center; gap: 5px;
-    color: #0095f6; text-decoration: none; font-weight: 600; font-size: 0.9rem;
-    margin-top: 10px;
-}
-
-/* Pestañas internas del perfil */
-.tabs_perfil {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin-top: 20px;
-    border-top: 1px solid #eee;
-    padding-top: 10px;
-}
+/* Tabs del Perfil */
+.tabs_perfil { display: flex; gap: 5px; margin-top: 25px; border-bottom: 2px solid var(--azul-principal); padding-left: 10px; }
 .tab_btn {
-    padding: 8px 20px;
-    border-radius: 20px 20px 0 0; /* Redondeado arriba */
-    border: none;
-    font-weight: bold;
-    cursor: pointer;
-    background: none;
-    color: #777;
+    background-color: #eef8fc; border: none; color: var(--azul-principal); padding: 10px 25px;
+    cursor: pointer; font-size: 0.95rem; font-weight: 600; border-radius: 8px 8px 0 0;
+    transition: all 0.2s ease; margin-bottom: 0;
 }
-.tab_btn.activo {
-    background-color: var(--azul-principal);
-    color: white;
-}
+.tab_btn:hover { background-color: #d1effa; color: var(--azul-oscuro); }
+.tab_btn.activo { background-color: var(--azul-principal); color: white; position: relative; top: 0px; }
 
-
-/* ESTILOS PARA LA PESTAÑA DE SEGUIDOS */
-.contenedor_seguidos {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding: 10px 0;
-}
-
+/* Lista de Seguidos */
+.contenedor_seguidos { display: flex; flex-direction: column; gap: 10px; padding: 10px 0; }
 .item_seguido {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background-color: white;
-    border: 1px solid var(--gris-borde);
-    padding: 10px 15px;
-    border-radius: 8px;
-    transition: box-shadow 0.2s;
+    display: flex; align-items: center; justify-content: space-between; background-color: white;
+    border: 1px solid var(--gris-borde); padding: 10px 15px; border-radius: 8px; transition: box-shadow 0.2s;
 }
-
-.item_seguido:hover {
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-.info_seguido_izq {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-}
-
-.avatar_seguido {
-    width: 40px; height: 40px;
-    border-radius: 50%;
-    object-fit: cover;
-}
-
-.textos_seguido {
-    display: flex; flex-direction: column;
-}
-
+.item_seguido:hover { box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+.info_seguido_izq { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.avatar_seguido { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+.textos_seguido { display: flex; flex-direction: column; }
 .nombre_seguido { font-weight: bold; font-size: 0.9rem; color: #333; }
 .handle_seguido { font-size: 0.8rem; color: #777; }
-
 .btn_ver_perfil {
-    border: 1px solid var(--azul-principal);
-    background: none;
-    color: var(--azul-principal);
-    padding: 5px 12px;
-    border-radius: 15px;
-    font-size: 0.8rem;
-    cursor: pointer;
-    font-weight: 600;
+    border: 1px solid var(--azul-principal); background: none; color: var(--azul-principal);
+    padding: 5px 12px; border-radius: 15px; font-size: 0.8rem; cursor: pointer; font-weight: 600;
 }
-.btn_ver_perfil:hover {
-    background-color: #f0f8ff;
+.btn_ver_perfil:hover { background-color: #f0f8ff; }
+
+/* Botones Acción Perfil */
+.btn_accion_perfil {
+    padding: 8px 20px; border-radius: 20px; font-weight: bold; font-size: 0.9rem;
+    cursor: pointer; transition: all 0.2s ease; border: none; outline: none;
+    display: flex; align-items: center; gap: 8px;
 }
+.btn_seguir { background-color: var(--azul-principal); color: white; }
+.btn_seguir:hover { background-color: #3aaad1; transform: scale(1.05); }
+.btn_siguiendo { background-color: white; color: #333; border: 1px solid #ccc; }
+.btn_siguiendo:hover { background-color: #ffebeb; color: #d9534f; border-color: #d9534f; content: "Dejar de seguir"; }
+.btn_amigo { background-color: #e6fcf5; color: #0ca678; border: 1px solid #0ca678; }
+.btn_amigo:hover { background-color: #c3fae8; }
 
 .oculto { display: none !important; }
 
-/* === PESTAÑAS DEL PERFIL (Iguales a la principal) === */
+/* === ESTILOS DE IMÁGENES EN POSTS (NUEVO) === */
 
-.tabs_perfil {
-    display: flex;
-    gap: 5px; /* Espacio entre pestañas */
-    margin-top: 25px; /* Separación del contenido de arriba */
-    border-bottom: 2px solid var(--azul-principal); /* LA LÍNEA DIVISORIA AZUL */
-    padding-left: 10px;
-}
-
-.tab_btn {
-    background-color: #eef8fc; /* Fondo azul muy clarito (Inactivo) */
-    border: none; 
-    color: var(--azul-principal); /* Texto azul (Inactivo) */
-    padding: 10px 25px; 
-    cursor: pointer; 
-    font-size: 0.95rem; 
-    font-weight: 600;
-    border-radius: 8px 8px 0 0; /* Redondeado solo arriba */
-    transition: all 0.2s ease; /* Transición suave para el hover */
-    margin-bottom: 0; /* Pegado a la línea de abajo */
-}
-
-/* Efecto al pasar el mouse (Sombreado) */
-.tab_btn:hover {
-    background-color: #d1effa; 
-    color: var(--azul-oscuro);
-}
-
-/* Estado Seleccionado (Activo) */
-.tab_btn.activo {
-    background-color: var(--azul-principal); /* Fondo Azul Fuerte */
-    color: white; /* Texto Blanco */
-    position: relative; 
-    top: 0px; /* Asegura que toque la línea */
-}
-
-/* === BOTÓN SEGUIR === */
-.btn_accion_perfil {
-    padding: 8px 20px;
-    border-radius: 20px;
-    font-weight: bold;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border: none;
-    outline: none;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-/* Estado: NO LO SIGO (Botón Azul Llamativo) */
-.btn_seguir {
-    background-color: var(--azul-principal); /* #4fc1e9 */
-    color: white;
-}
-.btn_seguir:hover {
-    background-color: #3aaad1; /* Azul más oscuro */
-    transform: scale(1.05); /* Pequeño zoom */
-}
-
-/* Estado: SIGUIENDO (Botón Blanco con Borde) */
-.btn_siguiendo {
-    background-color: white;
-    color: #333;
-    border: 1px solid #ccc;
-}
-.btn_siguiendo:hover {
-    background-color: #ffebeb; /* Rojo muy claro (Indica que puedes dejar de seguir) */
-    color: #d9534f;
-    border-color: #d9534f;
-    content: "Dejar de seguir"; /* Truco avanzado de CSS (opcional) */
-}
-
-/* Estado: AMIGOS (Botón Verde o Especial) */
-.btn_amigo {
-    background-color: #e6fcf5;
-    color: #0ca678;
-    border: 1px solid #0ca678;
-}
-.btn_amigo:hover {
-    background-color: #c3fae8;
-}
-/* === BUSCADOR DESPLEGABLE === */
-.contenedor_busqueda {
-    position: relative; /* Importante para que el dropdown se pegue aquí */
-}
-
-.dropdown_resultados {
-    position: absolute;
-    top: 100%; /* Justo debajo del input */
-    left: 0;
+.contenedor_multimedia_post {
+    margin-top: 10px;
+    margin-bottom: 10px;
     width: 100%;
-    background-color: white;
-    border: 1px solid #ddd;
-    border-radius: 0 0 8px 8px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    z-index: 1000; /* Para que flote sobre todo */
-    max-height: 300px;
-    overflow-y: auto;
-}
-
-.item_resultado {
+    
+    /* DEFINIMOS LA ALTURA MÁXIMA */
+    height: 350px; /* Puedes cambiar esto a 300px o 400px según prefieras */
+    
+    background-color: #f0f2f5; /* Un fondo gris suave por si la imagen no llena todo */
+    border-radius: 12px;
+    overflow: hidden; /* Corta lo que sobresalga de las esquinas */
+    border: 1px solid #e1e3e8;
+    
+    /* Centrar la imagen en el cuadro */
     display: flex;
+    justify-content: center;
     align-items: center;
-    padding: 10px;
-    cursor: pointer;
-    border-bottom: 1px solid #eee;
-    transition: background 0.2s;
 }
 
-.item_resultado:hover {
-    background-color: #f5f8fa;
-}
-
-.item_resultado:last-child {
-    border-bottom: none;
-}
-
-.avatar_resultado {
-    width: 35px; height: 35px;
-    border-radius: 50%;
-    margin-right: 10px;
-    object-fit: cover;
-}
-
-.info_resultado {
-    display: flex;
-    flex-direction: column;
-}
-
-.nombre_resultado {
-    font-size: 0.9rem;
-    font-weight: bold;
-    color: #333;
-}
-
-.usuario_resultado {
-    font-size: 0.8rem;
-    color: #777;
+.imagen_post_feed {
+    /* Hacemos que la imagen se ajuste inteligentemente */
+    width: 100%;
+    height: 100%;
+    
+    /* 'cover' recorta la imagen para llenar el cuadro (se ve bonito y uniforme) */
+    /* 'contain' muestra la imagen completa sin recortar (puede dejar bordes grises) */
+    object-fit: contain; 
+    
+    display: block;
 }
