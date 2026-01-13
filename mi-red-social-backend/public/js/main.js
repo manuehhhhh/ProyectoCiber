@@ -27,14 +27,15 @@ document.addEventListener('DOMContentLoaded', () => {
 // ==========================================
 
 function configurarNavegacion() {
+    // 1. Botón Inicio
     const btnInicio = document.querySelector('.item_menu:nth-child(1)');
     if(btnInicio) {
         btnInicio.addEventListener('click', (e) => {
-            e.preventDefault();
-            window.location.reload(); 
+            window.location.href = 'index.html'; 
         });
     }
 
+    // 2. Perfil en la barra derecha
     const perfilDerecha = document.getElementById('info-usuario-logueado');
     if(perfilDerecha) {
         perfilDerecha.style.cursor = 'pointer';

@@ -296,3 +296,179 @@ textarea { border: none; outline: none; width: 100%; color: var(--texto-oscuro);
     padding: 5px;
     margin: -5px; /* Ajuste para que no mueva lo demás */
 }
+
+/* === SECCIÓN EVENTOS === */
+
+.header_seccion_azul {
+    background-color: var(--azul-principal); /* #4fc1e9 */
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    color: white;
+}
+
+.header_eventos_top {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+
+.tabs_eventos_visual {
+    display: flex;
+    gap: 15px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.tabs_eventos_visual span {
+    cursor: pointer;
+    opacity: 0.8;
+    padding-bottom: 5px;
+}
+.tabs_eventos_visual span.activo {
+    opacity: 1;
+    border-bottom: 2px solid white;
+    font-weight: bold;
+}
+
+.barra_accion_evento {
+    background-color: rgba(0,0,0,0.15); /* Azul un poco más oscuro */
+    padding: 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background 0.2s;
+}
+
+.barra_accion_evento:hover {
+    background-color: rgba(0,0,0,0.25);
+}
+
+/* TARJETA DE EVENTO */
+.tarjeta_evento {
+    background-color: white;
+    border-bottom: 1px solid var(--gris-borde);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.header_card_evento {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+}
+
+.icono_evento {
+    width: 50px; height: 50px;
+    background-color: #ffebeb; /* Fondo rosado/rojo claro para el icono */
+    border-radius: 50%;
+    display: flex; justify-content: center; align-items: center;
+    color: #ff6b6b; font-size: 1.5rem;
+}
+
+.info_card_evento {
+    flex-grow: 1;
+}
+
+.titulo_evento {
+    font-weight: bold;
+    font-size: 1.1rem;
+    color: #333;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.tiempo_evento {
+    font-size: 0.8rem;
+    color: #888;
+    float: right;
+}
+
+.desc_evento {
+    font-size: 0.95rem;
+    color: #555;
+    margin-bottom: 10px;
+}
+
+.link_ver_mas {
+    color: var(--azul-principal);
+    font-size: 0.85rem;
+    font-weight: bold;
+    cursor: pointer;
+    text-decoration: none;
+}
+.link_ver_mas:hover { text-decoration: underline; }
+
+.footer_card_evento {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    color: #777;
+    font-size: 0.9rem;
+}
+
+/* Estilos de input modal */
+.input_modal {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+/* Estilo para el marcador de suscripción */
+.icono_suscripcion {
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: transform 0.2s;
+    color: #555; /* Color por defecto (gris) */
+}
+
+.icono_suscripcion:hover {
+    transform: scale(1.1);
+}
+
+.suscrito_activo {
+    color: var(--azul-principal); /* Azul cuando está suscrito */
+}
+
+/* Ajustes para el modal de detalle */
+.detalle_evento_imagen {
+    width: 100%;
+    max-height: 300px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.detalle_meta_info {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+    color: #666;
+    font-size: 0.9rem;
+    background: #f9f9f9;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+/* Botón gris para cancelar acciones */
+.boton_gris {
+    background-color: #e4e6eb;
+    color: #4b4f56;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.boton_gris:hover {
+    background-color: #d8dadf;
+}

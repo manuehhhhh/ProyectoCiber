@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>SoyUCAB - Eventos</title>
+    <link rel="stylesheet" href="css/estilos.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+    <div class="contenedor_principal">
+        
+        <div class="barra_lateral_izquierda">
+            <div class="logo_app">
+                <img src="img/logo_soyucab.png" alt="SoyUCAB" class="imagen_logo_sidebar">
+            </div>
+            
+            <nav class="menu_navegacion">
+                <a href="javascript:void(0)" onclick="window.location.href='index.html'" class="item_menu">
+                    <i class="fa-solid fa-house"></i> Inicio
+                </a>
+                
+                <div class="separador_menu"></div>
+                
+                <a href="#" class="item_menu">
+                    <i class="fa-solid fa-users"></i> Grupos Suscritos
+                </a>
+                
+                <a href="eventos.html?filtro=suscritos" id="sidebar-eventos-suscritos" class="item_menu">
+                    <i class="fa-solid fa-bookmark"></i> Eventos Suscritos
+                </a>
+            </nav>
+        </div>
+
+        <main class="columna_central">
+            
+            <div id="barra-busqueda-eventos" class="contenedor_busqueda">
+                <i class="fa-solid fa-magnifying-glass icono_busqueda"></i>
+                <input type="text" class="input_busqueda" placeholder="Buscar eventos..." autocomplete="off">
+            </div>
+
+            <div id="barra-pestanas-eventos" class="barra_pestanas" style="margin-top: 20px;">
+                <button class="pestana" onclick="window.location.href='index.html'">Publicaciones</button>
+                <button class="pestana">Grupos</button>
+                <button class="pestana activo" onclick="window.location.href='eventos.html'">Eventos</button>
+                <button class="pestana">Networking</button>
+                <button class="pestana">Recursos</button>
+            </div>
+
+            <div id="header-titulo-suscritos" style="display: none; margin-bottom: 20px; padding: 15px 0; border-bottom: 1px solid #eee;">
+                <h2 style="font-size: 1.5rem; color: var(--azul-principal);">
+                    <i class="fa-solid fa-bookmark"></i> Mis Eventos Suscritos
+                </h2>
+            </div>
+
+            <div id="btn-crear-evento-container" class="caja_crear_publicacion" style="cursor: pointer; display:none; margin-top: 15px;" onclick="abrirModalCrearEvento()">
+                <div class="cabecera_azul" style="text-align: center;">
+                    <i class="fa-solid fa-plus"></i> Crear Nuevo Evento
+                </div>
+            </div>
+
+            <div id="lista-eventos" class="feed_publicaciones">
+                <p style="text-align:center; padding: 20px; color: #777;">Cargando eventos...</p>
+            </div>
+        </main>
+
+        <aside class="barra_lateral_derecha">
+            <div class="header_perfil">
+                <div id="info-usuario-logueado" class="info_usuario_top">
+                    <img src="img/avatar_placeholder.png" class="avatar_top">
+                    <div class="textos_top">
+                        <span class="nombre_top">Cargando...</span>
+                        <span class="usuario_top">...</span>
+                    </div>
+                </div>
+            </div>
+            <h3 class="titulo_seccion">Notificaciones</h3>
+        </aside>
+
+    </div>
+
+    <div id="modal-crear-evento" class="modal_overlay oculto">
+        <div class="modal_contenido">
+            <div class="modal_header">
+                <h3>Nuevo Evento</h3>
+                <button onclick="cerrarModal('modal-crear-evento')" class="btn_cerrar">&times;</button>
+            </div>
+            <div class="modal_body">
+                <input type="text" id="ev-nombre" placeholder="Título del Evento" class="input_modal">
+                <textarea id="ev-desc" rows="3" placeholder="Descripción" class="input_modal"></textarea>
+                <input type="text" id="ev-lugar" placeholder="Lugar (Ej: Aula Magna)" class="input_modal">
+                <select id="ev-categoria" class="input_modal">
+                    <option value="Conferencia">Conferencia</option>
+                    <option value="Taller">Taller</option>
+                    <option value="Competencia">Competencia</option>
+                </select>
+                <div style="display:flex; gap:10px;">
+                    <input type="date" id="ev-fecha" class="input_modal">
+                    <input type="time" id="ev-hora" class="input_modal">
+                </div>
+            </div>
+            <div class="modal_footer">
+                <button onclick="guardarEvento()" class="boton_publicar">Crear Evento</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-detalle-evento" class="modal_overlay oculto">
+        <div class="modal_contenido" style="width: 600px; max-width:90%;">
+            <div class="modal_header">
+                <h3 id="det-titulo">Detalle</h3>
+                <button onclick="cerrarModal('modal-detalle-evento')" class="btn_cerrar">&times;</button>
+            </div>
+            
+            <div class="modal_body" id="det-body" style="max-height: 70vh; overflow-y: auto;">
+                </div>
+            
+            <div class="modal_footer" id="det-footer" style="justify-content: space-between;">
+                </div>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script> 
+    <script src="js/eventos.js"></script>
+</body>
+</html>

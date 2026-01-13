@@ -12,18 +12,21 @@
         
         <div class="barra_lateral_izquierda">
             <div class="logo_app">
-        <img src="img/logo_soyucab.png" alt="SoyUCAB" class="imagen_logo_sidebar">
-    </div>
+                <img src="img/logo_soyucab.png" alt="SoyUCAB" class="imagen_logo_sidebar">
+            </div>
             
             <nav class="menu_navegacion">
-                <a href="#" class="item_menu activo">
+                <a href="javascript:void(0)" onclick="window.location.href='index.html'" class="item_menu activo">
                     <i class="fa-solid fa-house"></i> Inicio
                 </a>
+                
                 <div class="separador_menu"></div>
+                
                 <a href="#" class="item_menu">
                     <i class="fa-solid fa-users"></i> Grupos Suscritos
                 </a>
-                <a href="#" class="item_menu">
+                
+                <a href="eventos.html?filtro=suscritos" class="item_menu">
                     <i class="fa-solid fa-bullhorn"></i> Eventos Suscritos
                 </a>
             </nav>
@@ -69,7 +72,7 @@
             <div class="barra_pestanas">
                 <button class="pestana activo">Publicaciones</button>
                 <button class="pestana">Grupos</button>
-                <button class="pestana">Eventos</button>
+                <button class="pestana" onclick="window.location.href='eventos.html'">Eventos</button>
                 <button class="pestana">Networking</button>
                 <button class="pestana">Recursos</button>
             </div>

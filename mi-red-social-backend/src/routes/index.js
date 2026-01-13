@@ -15,6 +15,7 @@ const profileController = require('../controllers/profileController');
 const relationshipController = require('../controllers/relationshipController'); 
 const miembroController = require('../controllers/miembroController');
 const searchController = require('../controllers/searchController');
+const eventController = require('../controllers/eventController');
 
 // =====================================================================
 // SECCIÓN A: RUTAS ESPECÍFICAS Y PERSONALIZADAS (Prioridad Alta)
@@ -50,6 +51,12 @@ router.post('/relationship/follow', relationshipController.toggleSeguir);
 
 // --- BUSCADOR ---
 router.get('/search', searchController.buscar);
+
+// --- GESTIÓN DE EVENTOS ---
+router.get('/eventos', eventController.obtenerEventos);
+router.post('/eventos/crear', eventController.crearEvento);
+router.post('/eventos/suscribirse', eventController.toggleAsistencia);
+
 // =====================================================================
 // SECCIÓN B: RUTAS AUTOMÁTICAS CRUD (Prioridad Baja)
 // =====================================================================
