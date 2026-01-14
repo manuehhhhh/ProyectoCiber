@@ -17,8 +17,9 @@ const Post = sequelize.define('Post', {
         type: DataTypes.STRING(255)
     },
     contenido_multimedia_post: {
-        type: DataTypes.BLOB
-    }
+    type: DataTypes.STRING(255), 
+    allowNull: true
+}
 }, {
     tableName: 'post',
     timestamps: false

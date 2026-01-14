@@ -1,317 +1,321 @@
+/* =========================================
+   1. VARIABLES Y RESET
+   ========================================= */
 :root {
     --azul-lateral: #6ca6e0; 
     --azul-principal: #4fc1e9;
-    --azul-oscuro: #357ebd; /* Color para el hover */
+    --azul-oscuro: #357ebd;       /* Hover botones */
     --azul-hover-suave: #5bcbf5;
     --gris-fondo: #f9f9f9;
     --gris-borde: #e0e0e0;
     --texto-oscuro: #333;
     --texto-gris: #888;
+    --rojo-alerta: #dc3545;
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+* { 
+    margin: 0; 
+    padding: 0; 
+    box-sizing: border-box; 
+    font-family: 'Segoe UI', Tahoma, sans-serif; 
+}
 
-body { background-color: #fff; height: 100vh; overflow: hidden; }
+body { 
+    background-color: #fff; 
+    height: 100vh; 
+    overflow: hidden; 
+}
 
-.contenedor_principal { display: grid; grid-template-columns: 240px 1fr 280px; height: 100%; }
+/* Grid Principal: Menú Izq (240px) - Centro (Auto) - Barra Der (280px) */
+.contenedor_principal { 
+    display: grid; 
+    grid-template-columns: 240px 1fr 280px; 
+    height: 100%; 
+}
 
-/* === IZQUIERDA === */
+/* =========================================
+   2. COMPONENTES GLOBALES (Botones, Badges, Inputs)
+   ========================================= */
+
+/* Botón Principal (Azul) */
+.boton_publicar {
+    background-color: var(--azul-principal);
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.1s;
+}
+.boton_publicar:hover { background-color: var(--azul-oscuro); }
+.boton_publicar:active { transform: scale(0.98); }
+
+/* Botón Secundario (Gris - Para cancelar) */
+.boton_gris {
+    background-color: #e4e6eb;
+    color: #4b4f56;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.boton_gris:hover { background-color: #d8dadf; }
+
+/* Badges (Etiquetas de colores) */
+.badge { 
+    padding: 5px 15px; 
+    border-radius: 20px; 
+    font-size: 0.8rem; 
+    font-weight: bold; 
+    color: #333; 
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+}
+.badge.amarillo { background-color: #ffc107; border: 1px solid #e0a800; }
+.badge.naranja { background-color: #fd7e14; color: white; border: 1px solid #e36d0d; }
+
+/* Enlace "Ver más" genérico */
+.link_ver_mas {
+    color: var(--azul-principal);
+    font-size: 0.85rem;
+    font-weight: bold;
+    cursor: pointer;
+    text-decoration: none;
+}
+.link_ver_mas:hover { text-decoration: underline; }
+
+/* =========================================
+   3. BARRA LATERAL IZQUIERDA
+   ========================================= */
 .barra_lateral_izquierda {
-    background-color: var(--azul-lateral); color: white; padding: 20px;
-    display: flex; flex-direction: column; align-items: center;
+    background-color: var(--azul-lateral);
+    color: white;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
-.logo_app { margin-bottom: 40px; }
-.menu_navegacion { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+
+.logo_app { 
+    margin-bottom: 40px; 
+    text-align: center; 
+    width: 100%;
+}
+
+.imagen_logo_sidebar {
+    width: 120px;
+    max-width: 80%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+
+.menu_navegacion { 
+    width: 100%; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 10px; 
+}
+
 .item_menu {
-    color: white; text-decoration: none; padding: 10px 15px; border-radius: 8px;
-    font-weight: 500; display: flex; align-items: center; gap: 10px;
-    transition: background-color 0.3s ease; /* Transición suave */
+    color: white; 
+    text-decoration: none; 
+    padding: 10px 15px; 
+    border-radius: 8px;
+    font-weight: 500; 
+    display: flex; 
+    align-items: center; 
+    gap: 10px;
+    transition: background-color 0.3s ease;
+    cursor: pointer;
 }
-/* Efecto Hover en Menú */
-.item_menu:hover { background-color: rgba(255,255,255,0.2); cursor: pointer; }
+.item_menu:hover { background-color: rgba(255,255,255,0.2); }
 .item_menu.activo { background-color: rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.3); }
+.separador_menu { height: 1px; background-color: rgba(255,255,255,0.3); margin: 5px 0; }
 
-/* === CENTRO === */
-.columna_central { padding: 20px 40px; overflow-y: auto; border-right: 1px solid var(--gris-borde); }
+/* =========================================
+   4. BARRA LATERAL DERECHA
+   ========================================= */
+.barra_lateral_derecha { 
+    padding: 20px; 
+    background-color: #fff; 
+    border-left: 1px solid var(--gris-borde); 
+}
 
-/* Buscador */
+.header_perfil {
+    background-color: var(--azul-lateral); 
+    padding: 15px; 
+    border-radius: 8px;
+    margin-bottom: 30px; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+    color: white; 
+    position: relative; 
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.info_usuario_top { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.avatar_top { width: 40px; height: 40px; border-radius: 50%; border: 2px solid white; object-fit: cover; }
+.textos_top { display: flex; flex-direction: column; }
+.nombre_top { font-weight: bold; font-size: 0.9rem; }
+.usuario_top { font-size: 0.75rem; opacity: 0.9; }
+
+.contenedor_dropdown { position: relative; }
+.flecha_menu { cursor: pointer; padding: 5px; transition: transform 0.2s; }
+.flecha_menu:hover { transform: scale(1.2); }
+
+.menu_flotante {
+    position: absolute; top: 110%; right: 0; background-color: white;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15); border-radius: 8px; 
+    overflow: hidden; width: 140px; z-index: 100;
+}
+.menu_flotante.oculto { display: none; }
+.menu_flotante a { 
+    display: block; padding: 12px; text-decoration: none; 
+    color: var(--texto-oscuro); font-size: 0.9rem; transition: background 0.2s; 
+}
+.menu_flotante a:hover { background-color: #f5f5f5; }
+
+.titulo_seccion { font-weight: bold; margin-bottom: 15px; font-size: 1.1rem; color: var(--texto-oscuro); }
+
+/* =========================================
+   5. COLUMNA CENTRAL (Layout y Herramientas)
+   ========================================= */
+.columna_central { 
+    padding: 20px 40px; 
+    overflow-y: auto; 
+    border-right: 1px solid var(--gris-borde); 
+}
+
+/* --- Buscador --- */
 .contenedor_busqueda {
-    border: 1px solid var(--azul-principal); border-radius: 20px; padding: 8px 15px;
+    position: relative;
+    border: 1px solid var(--azul-principal); 
+    border-radius: 20px; 
+    padding: 8px 15px;
     display: flex; align-items: center; gap: 10px; margin-bottom: 20px;
 }
 .input_busqueda { border: none; outline: none; width: 100%; font-size: 0.95rem; }
 .icono_busqueda { color: var(--texto-gris); }
 
-/* Caja Publicar */
-.caja_crear_publicacion {
-    border: 1px solid var(--gris-borde); border-radius: 8px; overflow: hidden; margin-bottom: 15px;
+.dropdown_resultados {
+    position: absolute; top: 100%; left: 0; width: 100%;
+    background-color: white; border: 1px solid #ddd; border-radius: 0 0 8px 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 9999; 
+    max-height: 300px; overflow-y: auto;
 }
-.cabecera_azul { background-color: var(--azul-principal); color: white; padding: 10px 15px; font-weight: bold; font-size: 0.9rem; }
+.item_resultado {
+    display: flex; align-items: center; padding: 10px; cursor: pointer;
+    border-bottom: 1px solid #eee; transition: background 0.2s;
+}
+.item_resultado:hover { background-color: #f5f8fa; }
+.avatar_resultado { width: 35px; height: 35px; border-radius: 50%; margin-right: 10px; object-fit: cover; }
+.info_resultado { display: flex; flex-direction: column; }
+.nombre_resultado { font-size: 0.9rem; font-weight: bold; color: #333; }
+.usuario_resultado { font-size: 0.8rem; color: #777; }
+
+/* --- Pestañas (Tabs) --- */
+.barra_pestanas { 
+    display: flex; gap: 5px; margin-bottom: 20px; 
+    border-bottom: 2px solid var(--azul-principal); padding-left: 10px; 
+}
+.pestana {
+    background-color: #eef8fc; border: none; color: var(--azul-principal);
+    padding: 10px 20px; cursor: pointer; font-size: 0.9rem; font-weight: 600;
+    border-radius: 8px 8px 0 0; transition: all 0.2s ease;
+}
+.pestana:hover { background-color: #d1effa; }
+.pestana.activo { background-color: var(--azul-principal); color: white; }
+
+/* --- Caja Crear Publicación / Evento --- */
+.caja_crear_publicacion { 
+    border: 1px solid var(--gris-borde); border-radius: 8px; 
+    overflow: hidden; margin-bottom: 15px; background-color: white;
+}
+.cabecera_azul { 
+    background-color: var(--azul-principal); color: white; 
+    padding: 10px 15px; font-weight: bold; font-size: 0.9rem; 
+}
 .cuerpo_publicar { padding: 15px; }
 .input_con_icono { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 15px; }
-/* Textarea estilizado para parecer input pero multilinea */
-textarea {
-    border: none; outline: none; width: 100%; color: var(--texto-oscuro);
-    resize: none; font-family: inherit; font-size: 0.95rem;
+textarea { 
+    border: none; outline: none; width: 100%; color: var(--texto-oscuro); 
+    resize: none; font-family: inherit; font-size: 0.95rem; 
 }
 .pie_publicar { display: flex; justify-content: space-between; align-items: center; }
 .icono_camara { font-size: 1.2rem; cursor: pointer; color: var(--azul-principal); transition: 0.2s; }
-.icono_camara:hover { transform: scale(1.1); } /* Efecto zoom ligero */
+.icono_camara:hover { transform: scale(1.1); }
 .acciones_derecha { display: flex; align-items: center; gap: 15px; }
 .contador { color: var(--azul-principal); font-weight: bold; font-size: 0.9rem; }
-.boton_publicar {
-    background-color: var(--azul-principal); color: white; border: none;
-    padding: 8px 20px; border-radius: 20px; font-weight: bold; cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.1s;
-}
-/* Efecto Hover en Botón Publicar */
-.boton_publicar:hover { background-color: var(--azul-oscuro); }
-.boton_publicar:active { transform: scale(0.98); }
 
-/* Pestañas (Tabs) Mejoradas */
-.barra_pestanas {
-    display: flex; gap: 5px; margin-bottom: 20px; border-bottom: 2px solid var(--azul-principal);
-    padding-left: 10px;
-}
-.pestana {
-    background-color: #eef8fc; /* Fondo azul muy clarito inactivo */
-    border: none; color: var(--azul-principal);
-    padding: 10px 20px; cursor: pointer; font-size: 0.9rem; font-weight: 600;
-    border-radius: 8px 8px 0 0; /* Solo bordes superiores redondeados */
-    transition: all 0.2s ease;
-}
-.pestana:hover {
-    background-color: #d1effa; /* Hover suave */
-}
-.pestana.activo {
-    background-color: var(--azul-principal); color: white;
-    /* Un pequeño truco para que parezca conectada a la barra de abajo */
-    position: relative; top: 0px; 
-}
-
-/* Feed */
+/* =========================================
+   6. FEED Y TARJETAS (Publicaciones y Eventos)
+   ========================================= */
 .tarjeta_publicacion { border-bottom: 1px solid var(--gris-borde); padding: 20px 0; }
 .encabezado_post { display: flex; justify-content: space-between; margin-bottom: 10px; }
-.autor_info { display: flex; gap: 10px; }
+
+.autor_info { display: flex; gap: 10px; align-items: center; }
 .avatar_post { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
 .nombres_post { display: flex; flex-direction: column; }
 .nombre_real { font-weight: bold; font-size: 0.95rem; color: var(--texto-oscuro); }
-.username { font-size: 0.85rem; color: var(--texto-gris); }
+.usuario { font-size: 0.85rem; color: var(--texto-gris); }
 .tiempo { font-size: 0.8rem; color: var(--texto-gris); }
+
 .contenido_post { margin-bottom: 15px; color: var(--texto-oscuro); font-size: 0.95rem; line-height: 1.4; }
-.footer_post { display: flex; justify-content: flex-end; gap: 20px; }
-.accion_social {
-    color: var(--texto-gris); font-size: 0.9rem; cursor: pointer; display: flex; gap: 6px; align-items: center;
-    transition: color 0.2s;
+
+/* Imagen en el post */
+.contenedor_multimedia_post {
+    margin-top: 10px; margin-bottom: 10px; width: 100%; height: 350px;
+    background-color: #f0f2f5; border-radius: 12px; overflow: hidden;
+    border: 1px solid #e1e3e8; display: flex; justify-content: center; align-items: center;
+}
+.imagen_post_feed { width: 100%; height: 100%; object-fit: contain; display: block; }
+
+/* Footer del post (Likes, Comentarios, Eliminar) */
+.footer_post { display: flex; justify-content: flex-end; gap: 20px; align-items: center; }
+.accion_social { 
+    color: var(--texto-gris); font-size: 0.9rem; cursor: pointer; 
+    display: flex; gap: 6px; align-items: center; transition: color 0.2s; 
 }
 .accion_social:hover { color: var(--azul-principal); }
 
-/* === DERECHA === */
-.barra_lateral_derecha { padding: 20px; background-color: #fff; border-left: 1px solid var(--gris-borde); }
-.header_perfil {
-    background-color: var(--azul-lateral); padding: 15px; border-radius: 8px;
-    margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center;
-    color: white; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-}
-.info_usuario_top { display: flex; align-items: center; gap: 10px; }
-.avatar_top { width: 40px; height: 40px; border-radius: 50%; border: 2px solid white; }
-.textos_top { display: flex; flex-direction: column; }
-.nombre_top { font-weight: bold; font-size: 0.9rem; }
-.usuario_top { font-size: 0.75rem; opacity: 0.9; }
-.flecha_menu { cursor: pointer; padding: 5px; transition: transform 0.2s; }
-.flecha_menu:hover { transform: scale(1.2); }
-.menu_flotante {
-    position: absolute; top: 110%; right: 0; background-color: white;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.15); border-radius: 8px; overflow: hidden; width: 140px; z-index: 100;
-}
-.menu_flotante.oculto { display: none; }
-.menu_flotante a { display: block; padding: 12px; text-decoration: none; color: var(--texto-oscuro); font-size: 0.9rem; transition: background 0.2s; }
-.menu_flotante a:hover { background-color: #f5f5f5; }
-.titulo_seccion { font-weight: bold; margin-bottom: 15px; font-size: 1.1rem; color: var(--texto-oscuro); }
-
-/* === MODAL DE COMENTARIOS === */
-.modal_overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background-color: rgba(0, 0, 0, 0.5); /* Fondo negro semitransparente */
-    display: flex; justify-content: center; align-items: center;
-    z-index: 1000; opacity: 1; transition: opacity 0.3s;
+.boton_eliminar { margin-left: auto; color: #888; }
+.boton_eliminar:hover { 
+    color: var(--rojo-alerta); background-color: #ffebeb; 
+    border-radius: 50%; padding: 5px; margin: -5px; 
 }
 
-.modal_overlay.oculto {
-    display: none; opacity: 0;
-}
+/* Icono de evento o categoría en la tarjeta */
+.icono_evento { font-size: 1.1rem; }
 
-.modal_contenido {
-    background-color: white; width: 500px; max-width: 90%; height: 600px;
-    border-radius: 12px; display: flex; flex-direction: column;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2); overflow: hidden;
-}
+/* Banderín de suscripción */
+.icono_suscripcion { font-size: 1.2rem; transition: transform 0.2s; color: #555; }
+.icono_suscripcion:hover { transform: scale(1.1); }
+.suscrito_activo { color: var(--azul-principal); }
 
-.modal_header {
-    padding: 15px 20px; border-bottom: 1px solid var(--gris-borde);
-    display: flex; justify-content: space-between; align-items: center;
-    background-color: var(--gris-fondo);
-}
-.btn_cerrar {
-    background: none; border: none; font-size: 2rem; cursor: pointer; color: #888;
-}
-.btn_cerrar:hover { color: #333; }
-
-.modal_body {
-    flex-grow: 1; overflow-y: auto; padding: 20px;
-    display: flex; flex-direction: column; gap: 15px;
-}
-
-.modal_footer {
-    padding: 15px; border-top: 1px solid var(--gris-borde);
-    display: flex; gap: 10px; background-color: white;
-}
-#input-nuevo-comentario {
-    flex-grow: 1; padding: 10px; border: 1px solid var(--gris-borde);
-    border-radius: 20px; outline: none;
-}
-#input-nuevo-comentario:focus { border-color: var(--azul-principal); }
-
-/* Estilo de un comentario individual */
-/* === ESTILOS DE COMENTARIOS MEJORADOS === */
-
-.bloque_comentario {
-    margin-bottom: 15px;
-    display: flex; /* Para alinear avatar y contenido */
-    gap: 10px;
-}
-
-.avatar_comentario {
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
-    object-fit: cover;
-    flex-shrink: 0; /* Que no se aplaste */
-    border: 1px solid #ddd;
-}
-
-/* Envoltorio para la burbuja y la fecha */
-.contenedor_burbuja {
-    display: flex;
-    flex-direction: column;
-    max-width: 85%;
-}
-
-.burbuja_comentario {
-    background-color: #f0f2f5;
-    padding: 10px 15px;
-    border-radius: 18px;
-    /* Truco para que la burbuja se vea bien incluso con poco texto */
-    display: flex;
-    flex-direction: column; 
-    align-items: flex-start;
-}
-
-/* Header dentro de la burbuja (Nombre y Usuario) */
-.header_comentario {
-    display: flex;
-    flex-direction: column; /* Uno debajo del otro */
-    margin-bottom: 5px;
-    line-height: 1.2;
-}
-
-.autor_comentario {
-    font-weight: bold;
-    font-size: 0.9rem;
-    color: #050505;
-}
-
-.usuario_comentario_modal {
-    font-size: 0.75rem;
-    color: #65676b;
-}
-
-.texto_comentario {
-    font-size: 0.95rem;
-    color: #050505;
-    word-break: break-word; /* Rompe palabras largas */
-    line-height: 1.4;
-    margin: 0;
-}
-
-.fecha_comentario {
-    font-size: 0.7rem;
-    color: #65676b;
-    margin-top: 3px;
-    margin-left: 10px; /* Un poco a la derecha para alinearse con la burbuja */
-}
-
-/* Ajuste del Footer del Modal */
-.modal_footer {
-    display: flex;
-    align-items: center; /* Centrar verticalmente */
-    gap: 10px;
-    padding: 15px;
-    border-top: 1px solid var(--gris-borde);
-}
-
-/* === PERFIL DE USUARIO === */
-
-/* Header del Perfil */
-.perfil_container {
-    background-color: white;
-    margin-bottom: 20px;
-    border-bottom: 1px solid var(--gris-borde);
-}
-
+/* =========================================
+   7. PERFIL DE USUARIO
+   ========================================= */
+.perfil_container { background-color: white; margin-bottom: 20px; border-bottom: 1px solid var(--gris-borde); }
 .perfil_banner {
-    height: 180px;
-    background-image: url('../img/banner_ucab.jpg'); /* Asegúrate de tener una imagen o usa un color */
-    background-color: #a0c4ff; /* Color de respaldo */
-    background-size: cover;
-    background-position: center;
-    position: relative;
+    height: 180px; background-color: #a0c4ff; background-image: url('../img/banner_ucab.jpg');
+    background-size: cover; background-position: center;
 }
-
-.perfil_info_seccion {
-    padding: 0 30px 20px 30px;
-    position: relative;
-}
-
-.contenedor_avatar_perfil {
-    position: relative;
-    width: 140px;
-    height: 140px;
-    margin-top: -70px; /* Esto hace que suba y tape el banner */
-    margin-bottom: 15px;
-}
-
-.avatar_perfil_grande {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    border: 4px solid white;
-    object-fit: cover;
-    background-color: white;
-}
+.perfil_info_seccion { padding: 0 30px 20px 30px; position: relative; }
+.contenedor_avatar_perfil { position: relative; width: 140px; height: 140px; margin-top: -70px; margin-bottom: 15px; }
+.avatar_perfil_grande { width: 100%; height: 100%; border-radius: 50%; border: 4px solid white; object-fit: cover; background-color: white; }
 
 .icono_editar_foto {
-    position: absolute;
-    bottom: 10px;
-    right: 10px;
-    background-color: var(--azul-principal);
-    color: white;
-    width: 30px; height: 30px;
-    border-radius: 50%;
-    display: flex; justify-content: center; align-items: center;
-    cursor: pointer; border: 2px solid white;
+    position: absolute; bottom: 10px; right: 10px; background-color: var(--azul-principal);
+    color: white; width: 30px; height: 30px; border-radius: 50%; border: 2px solid white;
+    display: flex; justify-content: center; align-items: center; cursor: pointer;
 }
 
-.fila_nombre_stats {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    flex-wrap: wrap;
-    gap: 20px;
-}
-
-.nombres_perfil h2 { font-size: 1.4rem; font-weight: 800; color: #000; display: flex; align-items: center; gap: 10px; }
-.lapiz_editar { font-size: 0.9rem; color: #555; cursor: pointer; }
+.fila_nombre_stats { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px; }
+.nombres_perfil h2 { font-size: 1.4rem; font-weight: 800; color: #000; }
 .handle_perfil { color: #666; font-size: 0.95rem; margin-top: 2px; display: block; }
 
 .stats_perfil { display: flex; gap: 30px; }
@@ -320,146 +324,192 @@ textarea {
 .stat_label { font-size: 0.85rem; color: #666; }
 
 .badges_perfil { display: flex; gap: 10px; margin-top: 5px; }
-.badge {
-    padding: 5px 15px;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: bold;
-    color: #333;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-.badge.amarillo { background-color: #ffc107; border: 1px solid #e0a800; }
-.badge.naranja { background-color: #fd7e14; color: white; border: 1px solid #e36d0d; }
 
-.bio_perfil {
-    margin-top: 15px;
-    font-size: 0.95rem;
-    color: #333;
-    line-height: 1.4;
-}
-
-.red_social_link {
-    display: inline-flex; align-items: center; gap: 5px;
-    color: #0095f6; text-decoration: none; font-weight: 600; font-size: 0.9rem;
-    margin-top: 10px;
-}
-
-/* Pestañas internas del perfil */
-.tabs_perfil {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin-top: 20px;
-    border-top: 1px solid #eee;
-    padding-top: 10px;
-}
+/* Tabs y Botones Perfil */
+.tabs_perfil { display: flex; gap: 5px; margin-top: 25px; border-bottom: 2px solid var(--azul-principal); padding-left: 10px; }
 .tab_btn {
-    padding: 8px 20px;
-    border-radius: 20px 20px 0 0; /* Redondeado arriba */
-    border: none;
-    font-weight: bold;
-    cursor: pointer;
-    background: none;
-    color: #777;
+    background-color: #eef8fc; border: none; color: var(--azul-principal); padding: 10px 25px;
+    cursor: pointer; font-size: 0.95rem; font-weight: 600; border-radius: 8px 8px 0 0;
+    transition: all 0.2s ease;
 }
-.tab_btn.activo {
-    background-color: var(--azul-principal);
-    color: white;
+.tab_btn:hover { background-color: #d1effa; }
+.tab_btn.activo { background-color: var(--azul-principal); color: white; }
+
+/* Botones de Seguir/Amigo */
+.btn_accion_perfil {
+    padding: 8px 20px; border-radius: 20px; font-weight: bold; font-size: 0.9rem;
+    cursor: pointer; transition: all 0.2s ease; border: none; outline: none;
+    display: flex; align-items: center; gap: 8px;
 }
+.btn_seguir { background-color: var(--azul-principal); color: white; }
+.btn_seguir:hover { background-color: #3aaad1; transform: scale(1.05); }
+.btn_siguiendo { background-color: white; color: #333; border: 1px solid #ccc; }
+.btn_siguiendo:hover { background-color: #ffebeb; color: var(--rojo-alerta); border-color: var(--rojo-alerta); }
+.btn_amigo { background-color: #e6fcf5; color: #0ca678; border: 1px solid #0ca678; }
 
-
-/* ESTILOS PARA LA PESTAÑA DE SEGUIDOS */
-.contenedor_seguidos {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding: 10px 0;
-}
-
+/* Lista de Seguidos */
+.contenedor_seguidos { display: flex; flex-direction: column; gap: 10px; padding: 10px 0; }
 .item_seguido {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background-color: white;
-    border: 1px solid var(--gris-borde);
-    padding: 10px 15px;
-    border-radius: 8px;
-    transition: box-shadow 0.2s;
+    display: flex; align-items: center; justify-content: space-between; background-color: white;
+    border: 1px solid var(--gris-borde); padding: 10px 15px; border-radius: 8px;
 }
-
-.item_seguido:hover {
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-.info_seguido_izq {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-}
-
-.avatar_seguido {
-    width: 40px; height: 40px;
-    border-radius: 50%;
-    object-fit: cover;
-}
-
-.textos_seguido {
-    display: flex; flex-direction: column;
-}
-
-.nombre_seguido { font-weight: bold; font-size: 0.9rem; color: #333; }
-.handle_seguido { font-size: 0.8rem; color: #777; }
-
+.item_seguido:hover { box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+.info_seguido_izq { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.avatar_seguido { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
 .btn_ver_perfil {
-    border: 1px solid var(--azul-principal);
-    background: none;
-    color: var(--azul-principal);
-    padding: 5px 12px;
-    border-radius: 15px;
-    font-size: 0.8rem;
-    cursor: pointer;
-    font-weight: 600;
+    border: 1px solid var(--azul-principal); background: none; color: var(--azul-principal);
+    padding: 5px 12px; border-radius: 15px; font-size: 0.8rem; cursor: pointer; font-weight: 600;
 }
-.btn_ver_perfil:hover {
-    background-color: #f0f8ff;
+.btn_ver_perfil:hover { background-color: #f0f8ff; }
+
+/* =========================================
+   8. ESTILOS ESPECÍFICOS DE EVENTOS (Modales y Headers)
+   ========================================= */
+
+/* Header azul simple para "Mis Eventos" */
+#header-titulo-suscritos h2 { font-size: 1.5rem; color: var(--azul-principal); }
+
+/* Inputs dentro del modal de crear evento */
+.input_modal {
+    width: 100%; padding: 10px; margin-bottom: 10px;
+    border: 1px solid #ccc; border-radius: 5px;
 }
 
+/* Detalles dentro del modal de evento */
+.detalle_meta_info {
+    display: flex; gap: 15px; margin-bottom: 15px; color: #666;
+    font-size: 0.9rem; background: #f9f9f9; padding: 10px; border-radius: 8px;
+}
+.detalle_evento_imagen {
+    width: 100%; max-height: 300px; object-fit: cover;
+    border-radius: 8px; margin-bottom: 15px;
+}
+
+/* =========================================
+   9. MODALES (Genérico y Comentarios)
+   ========================================= */
+.modal_overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center;
+    z-index: 1000; opacity: 1; transition: opacity 0.3s;
+}
+.modal_overlay.oculto { display: none; opacity: 0; }
+
+.modal_contenido {
+    background-color: white; width: 500px; max-width: 90%; height: 600px;
+    border-radius: 12px; display: flex; flex-direction: column;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2); overflow: hidden;
+}
+
+.modal_header { 
+    padding: 15px 20px; border-bottom: 1px solid var(--gris-borde); 
+    display: flex; justify-content: space-between; align-items: center; background-color: var(--gris-fondo); 
+}
+.btn_cerrar { background: none; border: none; font-size: 2rem; cursor: pointer; color: #888; }
+.btn_cerrar:hover { color: #333; }
+
+.modal_body { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+
+.modal_footer { 
+    padding: 15px; border-top: 1px solid var(--gris-borde); 
+    display: flex; gap: 10px; background-color: white; align-items: center; 
+}
+#input-nuevo-comentario { flex-grow: 1; padding: 10px; border: 1px solid var(--gris-borde); border-radius: 20px; outline: none; }
+
+/* Bloques de comentarios dentro del modal */
+.bloque_comentario { margin-bottom: 15px; display: flex; gap: 10px; }
+.avatar_comentario { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+.contenedor_burbuja { display: flex; flex-direction: column; max-width: 85%; }
+.burbuja_comentario { 
+    background-color: #f0f2f5; padding: 10px 15px; 
+    border-radius: 18px; display: flex; flex-direction: column; 
+}
+.autor_comentario { font-weight: bold; font-size: 0.9rem; color: #050505; }
+.usuario_comentario_modal { font-size: 0.75rem; color: #65676b; margin-left: 5px; }
+.texto_comentario { font-size: 0.95rem; color: #050505; line-height: 1.4; margin: 0; }
+.fecha_comentario { font-size: 0.7rem; color: #65676b; margin-top: 3px; margin-left: 10px; }
+
+/* =========================================
+   10. UTILIDADES
+   ========================================= */
 .oculto { display: none !important; }
 
-/* === PESTAÑAS DEL PERFIL (Iguales a la principal) === */
+/* === MEJORAS VISUALES DEL MODAL DE EVENTOS === */
 
-.tabs_perfil {
+/* Encabezado del modal ahora azul para darle identidad */
+.modal_header {
+    background-color: var(--azul-principal);
+    color: white;
+    border-bottom: none;
+}
+/* El botón de cerrar debe ser blanco ahora */
+.modal_header .btn_cerrar {
+    color: white;
+    opacity: 0.8;
+}
+.modal_header .btn_cerrar:hover { opacity: 1; }
+
+/* Sub-cabecera con categoría y organizador */
+.detalle_cabecera_color {
+    background-color: #eef8fc; /* Azul muy clarito */
+    padding: 15px 20px;
     display: flex;
-    gap: 5px; /* Espacio entre pestañas */
-    margin-top: 25px; /* Separación del contenido de arriba */
-    border-bottom: 2px solid var(--azul-principal); /* LA LÍNEA DIVISORIA AZUL */
-    padding-left: 10px;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--gris-borde);
 }
 
-.tab_btn {
-    background-color: #eef8fc; /* Fondo azul muy clarito (Inactivo) */
-    border: none; 
-    color: var(--azul-principal); /* Texto azul (Inactivo) */
-    padding: 10px 25px; 
-    cursor: pointer; 
-    font-size: 0.95rem; 
-    font-weight: 600;
-    border-radius: 8px 8px 0 0; /* Redondeado solo arriba */
-    transition: all 0.2s ease; /* Transición suave para el hover */
-    margin-bottom: 0; /* Pegado a la línea de abajo */
+.badge_modal {
+    background-color: var(--azul-principal);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: bold;
 }
 
-/* Efecto al pasar el mouse (Sombreado) */
-.tab_btn:hover {
-    background-color: #d1effa; 
+.organizador_modal {
+    font-size: 0.85rem;
     color: var(--azul-oscuro);
+    font-weight: 500;
 }
 
-/* Estado Seleccionado (Activo) */
-.tab_btn.activo {
-    background-color: var(--azul-principal); /* Fondo Azul Fuerte */
-    color: white; /* Texto Blanco */
-    position: relative; 
-    top: 0px; /* Asegura que toque la línea */
+/* Caja de información (Fecha, Hora, Lugar) */
+.contenedor_info_evento {
+    padding: 0 10px;
+    margin-top: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.detalle_dato {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    background-color: #f9f9f9;
+    padding: 12px;
+    border-radius: 8px;
+    border-left: 4px solid var(--azul-principal); /* Borde decorativo azul */
+}
+
+.icono_detalle {
+    font-size: 1.2rem;
+    color: var(--azul-principal);
+    margin-top: 2px;
+}
+
+.separador_modal {
+    height: 1px;
+    background-color: #eee;
+    margin: 20px 0;
+}
+
+textarea.input_modal {
+    min-height: 100px;       /* Le damos una altura mínima obligatoria */
+    border: 1px solid #ccc;  /* Forzamos que tenga borde gris */
+    resize: vertical;        /* Permitimos que el usuario lo pueda estirar si quiere */
+    padding: 10px;           /* Espacio interno para que el texto no pegue al borde */
+    font-family: inherit;    /* Que use la misma letra que el resto */
+    display: block;          /* Asegura que ocupe su propia línea */
 }

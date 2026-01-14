@@ -1,15 +1,13 @@
-// src/index.js
 const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
 
-// 1. Importamos la conexión de Sequelize (ya no usamos ./db)
+// 1. Importamos la conexión de Sequelize
 const db = require('./models'); 
 
-// 2. Importamos el archivo de rutas (src/routes/index.js)
-// Node busca automáticamente el archivo "index.js" dentro de la carpeta routes
+// 2. Importamos el archivo de rutas
 const routes = require('./routes'); 
 
 // Inicializaciones
@@ -21,15 +19,24 @@ app.use(morgan('dev'));
 app.use(cors());
 app.use(express.json());
 
-// 3. CONECTAMOS LAS RUTAS
-// Aquí le decimos: "Todo lo que llegue a /api, manéjalo con el archivo routes"
+// IMPORTANTE: Esto ayuda a procesar datos de formularios simples (no multipart)
+app.use(express.urlencoded({ extended: true })); 
+
+// 3. CONECTAMOS LAS RUTAS DE LA API
 app.use('/api', routes);
 
-// Archivos Estáticos (Tu frontend)
+// =======================================================================
+// 4. ARCHIVOS ESTÁTICOS (CORREGIDO) 🔧
+// =======================================================================
+// Esta única línea es suficiente. Le dice a Express:
+// "Todo lo que esté dentro de la carpeta 'public', sírvelo tal cual".
+// Como tu carpeta 'uploads' está DENTRO de 'public', esto funciona automáticamente.
 app.use(express.static(path.join(__dirname, '../public')));
 
-// 4. Sincronizar Base de Datos y Arrancar
-// force: false asegura que NO se borren tus datos al reiniciar
+// (He eliminado la línea extra de '/uploads' para evitar conflictos de rutas)
+// =======================================================================
+
+// 5. Sincronizar Base de Datos y Arrancar
 db.sequelize.sync({ force: false }).then(() => {
     console.log("✅ Tablas sincronizadas con Sequelize");
     app.listen(PORT, () => {

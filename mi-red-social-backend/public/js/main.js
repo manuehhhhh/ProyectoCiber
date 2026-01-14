@@ -1,10 +1,12 @@
 /**
  * ARCHIVO PRINCIPAL: main.js
- * Controla toda la lógica del Frontend (SPA, Feed, Perfil, Interacciones).
+ * Controla toda la lógica del Frontend.
+ * Versión: Incluye Perfil, Amistad, Comentarios y SUBIDA DE IMÁGENES.
  */
 
-const ID_USUARIO_LOGUEADO = 1; 
+const ID_USUARIO_LOGUEADO = 45; 
 let ID_POST_ACTUAL_EN_MODAL = null;
+let archivoPostSeleccionado = null; // Variable global para la imagen del post
 
 // ==========================================
 // 1. INICIALIZACIÓN
@@ -16,24 +18,24 @@ document.addEventListener('DOMContentLoaded', () => {
     configurarNavegacion();       // Control de botones Inicio/Perfil
     inicializarContador();        // Contador de caracteres del post
     configurarModalComentarios(); // Eventos del modal
+    configurarInputImagenPost();  //  Eventos para la camarita
+    configurarBuscador();              //Eventos para el buscador global
 });
 
 // ==========================================
-// 2. NAVEGACIÓN (SPA - Single Page Application) 🧭
+// 2. NAVEGACIÓN (SPA) 🧭
 // ==========================================
 
 function configurarNavegacion() {
-    // 1. Botón "Inicio" del menú lateral
+    // 1. Botón Inicio
     const btnInicio = document.querySelector('.item_menu:nth-child(1)');
     if(btnInicio) {
         btnInicio.addEventListener('click', (e) => {
-            e.preventDefault();
-            // Recargamos la página para "resetear" la vista al estado inicial limpio
-            window.location.reload(); 
+            window.location.href = 'index.html'; 
         });
     }
 
-    // 2. Clic en la tarjeta de perfil del panel derecho
+    // 2. Perfil en la barra derecha
     const perfilDerecha = document.getElementById('info-usuario-logueado');
     if(perfilDerecha) {
         perfilDerecha.style.cursor = 'pointer';
@@ -41,32 +43,74 @@ function configurarNavegacion() {
     }
 }
 
-/**
- * Carga y renderiza la vista de Perfil en la columna central.
- * @param {number} idUsuario - ID del usuario a visualizar.
- */
 async function irAlPerfil(idUsuario) {
     const columnaCentral = document.querySelector('.columna_central');
     columnaCentral.innerHTML = '<p style="text-align:center; margin-top:50px;">Cargando perfil...</p>';
 
     try {
-        const res = await fetch(`/api/profile/${idUsuario}`);
+        const idPerfil = parseInt(idUsuario);
+        const idLogueado = parseInt(ID_USUARIO_LOGUEADO);
+
+        // 1. OBTENER DATOS
+        const res = await fetch(`/api/profile/${idPerfil}`);
         if(!res.ok) throw new Error("Error al cargar perfil");
         const datos = await res.json();
 
-        // Lógica visual: Badge de Carrera (Solo si existe)
-        let htmlCarrera = '';
-        if (datos.carrera) {
-            htmlCarrera = `<span class="badge naranja">${datos.carrera}</span>`;
+        // 2. LÓGICA BOTÓN SEGUIR / AMIGOS
+        let htmlBotonAccion = '';
+        if (idPerfil !== idLogueado) {
+            try {
+                const resStatus = await fetch(`/api/relationship/status?id_origen=${idLogueado}&id_destino=${idPerfil}`);
+                const dataStatus = await resStatus.json();
+                
+                let textoBtn = "Seguir";
+                let claseBtn = "btn_seguir";
+                let iconoBtn = '<i class="fa-solid fa-user-plus"></i>';
+
+                if (dataStatus.estado === 'SIGUE') {
+                    textoBtn = "Siguiendo";
+                    claseBtn = "btn_siguiendo";
+                    iconoBtn = '<i class="fa-solid fa-check"></i>';
+                } else if (dataStatus.estado === 'AMIGO') {
+                    textoBtn = "Amigos";
+                    claseBtn = "btn_amigo";
+                    iconoBtn = '<i class="fa-solid fa-user-group"></i>';
+                }
+
+                htmlBotonAccion = `
+                    <button id="btn-relacion-perfil" class="btn_accion_perfil ${claseBtn}" onclick="toggleSeguir(${idPerfil})">
+                        ${iconoBtn} <span>${textoBtn}</span>
+                    </button>`;
+            } catch(e) { console.error(e); }
         }
 
-        // Construcción del HTML del Perfil
+        // 3. BADGE CARRERA
+        let htmlCarrera = datos.carrera ? `<span class="badge naranja">${datos.carrera}</span>` : '';
+
+        // ============================================================
+        // 4. AVATAR (CORREGIDO: Usamos datos.foto_perfil)
+        // ============================================================
+        // Antes decía datos.foto, pero la base de datos manda datos.foto_perfil
+        const avatarUrl = datos.foto_perfil ? datos.foto_perfil : 'img/avatar_placeholder.png';
+        
+        // 5. HTML COMPLETO
         const htmlPerfil = `
             <div class="perfil_container">
-                <div class="perfil_banner"></div> <div class="perfil_info_seccion">
+                <div class="perfil_banner"></div> 
+                <div class="perfil_info_seccion">
                     <div class="contenedor_avatar_perfil">
-                        <img src="img/avatar_placeholder.png" class="avatar_perfil_grande">
-                        ${idUsuario === ID_USUARIO_LOGUEADO ? '<div class="icono_editar_foto"><i class="fa-solid fa-pencil"></i></div>' : ''}
+                        <img src="${avatarUrl}" class="avatar_perfil_grande" id="img-avatar-perfil-visual">
+                        
+                        ${idPerfil === idLogueado ? `
+                            <div class="icono_editar_foto" onclick="document.getElementById('input-foto-perfil').click()">
+                                <i class="fa-solid fa-pencil"></i>
+                            </div>
+                            <input type="file" id="input-foto-perfil" accept="image/*" style="display: none;" onchange="subirFotoPerfil(this)">
+                        ` : ''}
+                    </div>
+
+                    <div style="position: absolute; top: 15px; right: 20px;">
+                        ${htmlBotonAccion}
                     </div>
 
                     <div class="fila_nombre_stats">
@@ -77,7 +121,7 @@ async function irAlPerfil(idUsuario) {
                         
                         <div class="stats_perfil">
                             <div class="stat_item">
-                                <span class="stat_numero">${datos.stats.seguidores}</span>
+                                <span class="stat_numero" id="num-seguidores">${datos.stats.seguidores}</span>
                                 <span class="stat_label">Seguidores</span>
                             </div>
                             <div class="stat_item">
@@ -99,30 +143,24 @@ async function irAlPerfil(idUsuario) {
                 </div>
             </div>
 
-            <div id="lista-publicaciones-perfil" class="feed_publicaciones">
-                </div>
-
-            <div id="lista-seguidos-perfil" class="contenedor_seguidos oculto">
-                </div>
+            <div id="lista-publicaciones-perfil" class="feed_publicaciones"></div>
+            <div id="lista-seguidos-perfil" class="contenedor_seguidos oculto"></div>
         `;
 
         columnaCentral.innerHTML = htmlPerfil;
 
-        // --- RENDERIZADO DE CONTENIDO ---
-
-        // 1. Cargar Posts del Perfil
+        // Cargar Posts
         const contenedorPosts = document.getElementById('lista-publicaciones-perfil');
         if(datos.posts.length === 0) {
             contenedorPosts.innerHTML = '<p style="text-align:center; color:#777; padding:20px">No hay publicaciones.</p>';
         } else {
             for (const post of datos.posts) {
-                // Pasamos 'datos' como autorPredefinido para optimizar y no hacer fetch extra
-                const htmlPost = await crearHTMLTarjetaPost(post, datos);
+                const htmlPost = await crearHTMLTarjetaPost(post, datos, true); 
                 contenedorPosts.innerHTML += htmlPost;
             }
         }
 
-        // 2. Cargar Lista de Seguidos
+        // Cargar Seguidos
         const contenedorSeguidos = document.getElementById('lista-seguidos-perfil');
         if(datos.listaSeguidos && datos.listaSeguidos.length > 0) {
             datos.listaSeguidos.forEach(persona => {
@@ -136,8 +174,7 @@ async function irAlPerfil(idUsuario) {
                             </div>
                         </div>
                         <button class="btn_ver_perfil" onclick="irAlPerfil(${persona.id})">Ver Perfil</button>
-                    </div>
-                `;
+                    </div>`;
                 contenedorSeguidos.innerHTML += htmlSeguido;
             });
         } else {
@@ -150,9 +187,6 @@ async function irAlPerfil(idUsuario) {
     }
 }
 
-/**
- * Cambia la visibilidad entre la lista de posts y la lista de seguidos.
- */
 function cambiarTabPerfil(tab) {
     const btnPosts = document.getElementById('tab-posts');
     const btnSeguidos = document.getElementById('tab-seguidos');
@@ -173,25 +207,150 @@ function cambiarTabPerfil(tab) {
 }
 
 // ==========================================
-// 3. GENERACIÓN DE TARJETAS (Feed y Perfil) 🃏
+// 3. IMÁGENES Y PUBLICACIÓN 📸
 // ==========================================
 
-async function crearHTMLTarjetaPost(post, autorPredefinido = null) {
-    // Si ya tenemos los datos del autor (ej. estamos en su perfil), los usamos.
-    // Si no, los buscamos por ID.
+// Configura el input file oculto para posts
+function configurarInputImagenPost() {
+    const btnCamara = document.getElementById('btn-select-imagen-post');
+    const input = document.getElementById('input-imagen-post');
+    const previewDiv = document.getElementById('preview-imagen-post');
+    const previewImg = previewDiv ? previewDiv.querySelector('img') : null;
+    const btnBorrar = document.getElementById('btn-borrar-preview');
+
+    if(btnCamara && input) {
+        btnCamara.addEventListener('click', () => input.click());
+
+        input.addEventListener('change', (e) => {
+            if(e.target.files && e.target.files[0]) {
+                archivoPostSeleccionado = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    previewImg.src = e.target.result;
+                    previewDiv.style.display = 'flex';
+                }
+                reader.readAsDataURL(archivoPostSeleccionado);
+            }
+        });
+
+        if(btnBorrar) {
+            btnBorrar.addEventListener('click', () => {
+                input.value = '';
+                archivoPostSeleccionado = null;
+                previewDiv.style.display = 'none';
+            });
+        }
+    }
+}
+
+// Subir Foto de Perfil (Llamada desde el HTML generado en irAlPerfil)
+async function subirFotoPerfil(inputElement) {
+    if(inputElement.files && inputElement.files[0]) {
+        const archivo = inputElement.files[0];
+        const imgVisual = document.getElementById('img-avatar-perfil-visual');
+        const iconoEditar = document.querySelector('.icono_editar_foto');
+
+        imgVisual.style.opacity = '0.5';
+        if(iconoEditar) iconoEditar.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
+        try {
+            const formData = new FormData();
+formData.append('tipo_subida', 'avatar'); 
+formData.append('foto', archivo);
+
+            const res = await fetch(`/api/miembro/${ID_USUARIO_LOGUEADO}/foto`, {
+                method: 'POST',
+                body: formData
+            });
+
+            if(res.ok) {
+                const data = await res.json();
+                // Timestamp para evitar caché
+                imgVisual.src = `${data.ruta}?t=${new Date().getTime()}`;
+                cargarPerfilUsuarioLateral(); 
+            } else { alert("Error al subir la foto"); }
+        } catch (error) { console.error(error); } 
+        finally {
+            imgVisual.style.opacity = '1';
+            if(iconoEditar) iconoEditar.innerHTML = '<i class="fa-solid fa-pencil"></i>';
+            inputElement.value = '';
+        }
+    }
+}
+
+// Botón Publicar (Actualizado para FormData)
+function configurarBotonPublicar() {
+    const btnPublicar = document.querySelector('.caja_crear_publicacion .boton_publicar');
+    const txtInput = document.getElementById('txt-publicacion');
+    const contador = document.getElementById('contador-caracteres');
+    const previewDiv = document.getElementById('preview-imagen-post');
+    const inputImagen = document.getElementById('input-imagen-post');
+    
+    if (btnPublicar && txtInput) {
+        const nuevoBtn = btnPublicar.cloneNode(true);
+        btnPublicar.parentNode.replaceChild(nuevoBtn, btnPublicar);
+        
+        nuevoBtn.addEventListener('click', async () => {
+            const contenido = txtInput.value.trim();
+            if (!contenido && !archivoPostSeleccionado) {
+                alert("Escribe algo o sube una imagen");
+                return;
+            }
+            
+            nuevoBtn.textContent = 'Subiendo...'; 
+            nuevoBtn.disabled = true;
+            
+            try {
+                const formData = new FormData();
+                formData.append('id_usuario', ID_USUARIO_LOGUEADO);
+                formData.append('contenido', contenido);
+                formData.append('tipo_subida', 'post');
+
+                if (archivoPostSeleccionado) {
+                    formData.append('imagen_post', archivoPostSeleccionado);
+                }
+
+                const res = await fetch('/api/publicar', {
+                    method: 'POST',
+                    body: formData 
+                });
+                
+                if (res.ok) { 
+                    txtInput.value = ''; 
+                    if(inputImagen) inputImagen.value = '';
+                    archivoPostSeleccionado = null;
+                    if(previewDiv) previewDiv.style.display = 'none';
+                    if(contador) contador.textContent = '200'; 
+                    await cargarPublicacionesInicio(); 
+                } else { alert('Error al publicar'); }
+            } catch (error) { alert('Error de conexión'); } 
+            finally { 
+                nuevoBtn.textContent = 'Publicar'; 
+                nuevoBtn.disabled = false; 
+            }
+        });
+    }
+}
+
+// ==========================================
+// 4. GENERACIÓN DE TARJETAS 🃏
+// ==========================================
+
+async function crearHTMLTarjetaPost(post, autorPredefinido = null, esVistaPerfil = false) {
     let datosAutor = autorPredefinido;
-    if (!datosAutor || !datosAutor.handle) { // Validación extra
+    
+    if (!datosAutor || !datosAutor.handle) { 
         datosAutor = await obtenerDatosAutor(post.id_usuario);
     }
     
-    // Fallbacks de seguridad para nombres
     const nombre = datosAutor.nombre || "Usuario";
     const handle = datosAutor.handle || "@usuario";
-
+    const urlFoto = datosAutor.foto || datosAutor.foto_perfil;
+    const avatarAutor = urlFoto ? urlFoto : 'img/avatar_placeholder.png';
     const tiempoTexto = formatearTiempo(post.tiempo_post);
     
-    // Obtener Likes
-    let likes = 0; let colorLike = ""; let claseCorazon = "fa-regular";
+    // Likes y Comentarios
+    let likes = 0; let claseCorazon = "fa-regular"; let colorLike = "";
     try {
         const rL = await fetch(`/api/likes/${post.id_post}?id_usuario_actual=${ID_USUARIO_LOGUEADO}`);
         const dL = await rL.json();
@@ -199,34 +358,58 @@ async function crearHTMLTarjetaPost(post, autorPredefinido = null) {
         if(dL.dio_like) { claseCorazon = "fa-solid"; colorLike = "color:#e0245e"; }
     } catch(e){}
 
-    // Obtener Conteo Comentarios
     let comentarios = 0;
-    try {
-        const rC = await fetch(`/api/comments/count/${post.id_post}`);
-        const dC = await rC.json();
-        comentarios = dC.cantidad;
-    } catch(e){}
+    try { const rC = await fetch(`/api/comments/count/${post.id_post}`); const dC = await rC.json(); comentarios = dC.cantidad; } catch(e){}
+
+    // Imagen
+    let htmlImagenPost = '';
+    if (post.contenido_multimedia_post) {
+        htmlImagenPost = `
+            <div class="contenedor_multimedia_post">
+                <img src="${post.contenido_multimedia_post}" class="imagen_post_feed">
+            </div>`;
+    }
+
+    // ============================================================
+    // LÓGICA DEL BOTÓN ELIMINAR (MODIFICADA)
+    // ============================================================
+    let htmlBotonEliminar = '';
+    if (post.id_usuario == ID_USUARIO_LOGUEADO && esVistaPerfil === true) {
+        htmlBotonEliminar = `
+            <div class="accion_social boton_eliminar" onclick="eliminarPost(${post.id_post})" title="Eliminar">
+                <i class="fa-solid fa-trash"></i>
+            </div>
+        `;
+    }
+    // ============================================================
 
     return `
-        <div class="tarjeta_publicacion">
+        <div class="tarjeta_publicacion" id="post-${post.id_post}">
             <div class="encabezado_post">
                 <div class="autor_info">
-                    <img src="img/avatar_placeholder.png" class="avatar_post">
+                    <img src="${avatarAutor}" class="avatar_post">
                     <div class="nombres_post">
-                        <span class="nombre_real" style="cursor:pointer" onclick="irAlPerfil(${post.id_usuario})">${nombre}</span>
-                        <span class="usuario" style="cursor:pointer" onclick="irAlPerfil(${post.id_usuario})">${handle}</span>
+                        <span class="nombre_real" onclick="irAlPerfil(${post.id_usuario})" style="cursor:pointer">${nombre}</span>
+                        <span class="usuario" onclick="irAlPerfil(${post.id_usuario})" style="cursor:pointer">${handle}</span>
                     </div>
                 </div>
                 <span class="tiempo">${tiempoTexto}</span>
             </div>
+            
             <div class="contenido_post">${post.contenido_textual_post}</div>
+            ${htmlImagenPost}
+
             <div class="footer_post">
-                <div class="accion_social" onclick="darLike(${post.id_post}, this)">
-                    <span class="numero-likes">${likes}</span> <i class="${claseCorazon} fa-heart" style="${colorLike}"></i> 
+                <div style="display:flex; gap:20px;">
+                    <div class="accion_social" onclick="darLike(${post.id_post}, this)">
+                        <span class="numero-likes">${likes}</span> <i class="${claseCorazon} fa-heart" style="${colorLike}"></i> 
+                    </div>
+                    <div class="accion_social" onclick="abrirModalComentarios(${post.id_post})">
+                        <span>${comentarios}</span> <i class="fa-regular fa-comment"></i>
+                    </div>
                 </div>
-                <div class="accion_social" onclick="abrirModalComentarios(${post.id_post})">
-                    <span>${comentarios}</span> <i class="fa-regular fa-comment"></i>
-                </div>
+                
+                ${htmlBotonEliminar}
             </div>
         </div>
     `;
@@ -238,6 +421,9 @@ async function cargarPublicacionesInicio() {
     
     contenedor.innerHTML = '<p style="text-align:center; padding:20px">Cargando...</p>';
     try {
+        // Antes de cargar, configurar el botón de publicar por si se recargó el DOM
+        configurarBotonPublicar();
+
         const res = await fetch('/api/post');
         const posts = await res.json();
         
@@ -258,29 +444,22 @@ async function cargarPublicacionesInicio() {
 }
 
 // ==========================================
-// 4. HELPERS Y UTILIDADES 🛠️
+// 5. HELPERS Y UTILS 🛠️
 // ==========================================
 
 function formatearTiempo(fechaISO) {
     const ahora = new Date();
     const fecha = new Date(fechaISO);
-    const dif = Math.floor((ahora - fecha) / 1000); // Segundos
+    const dif = Math.floor((ahora - fecha) / 1000); 
 
     if(dif < 60) return "Hace un momento";
-    
-    const min = Math.floor(dif/60);
-    if(min < 60) return `Hace ${min} min`;
-    
-    const horas = Math.floor(min/60);
-    if(horas <= 5) return `Hace ${horas} h`;
-    
+    const min = Math.floor(dif/60); if(min < 60) return `Hace ${min} min`;
+    const horas = Math.floor(min/60); if(horas <= 5) return `Hace ${horas} h`;
     return fecha.toLocaleDateString('es-VE', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
-// Obtiene nombre y handle real consultando las tablas adecuadas
 async function obtenerDatosAutor(id) {
     try {
-        // 1. Consultar tabla Miembro
         const resM = await fetch(`/api/miembro/${id}`);
         if(!resM.ok) throw new Error();
         const dataM = await resM.json();
@@ -288,7 +467,6 @@ async function obtenerDatosAutor(id) {
         const handle = `@${dataM.nombre_usuario}`;
         let nombre = handle;
 
-        // 2. Consultar tabla específica según tipo
         try {
              if (dataM.tipo_miembro === 'P') {
                 const r = await fetch(`/api/persona/${id}`); const p = await r.json(); 
@@ -302,9 +480,10 @@ async function obtenerDatosAutor(id) {
              }
         } catch(e){}
         
-        return { nombre, handle };
+        // Devolvemos también la foto (si la API de miembro la trae, aseguramos que el controller la incluya)
+        return { nombre, handle, foto: dataM.foto_perfil };
     } catch(e) { 
-        return { nombre: "Usuario "+id, handle: "@usuario"+id }; 
+        return { nombre: "Usuario "+id, handle: "@usuario"+id, foto: null }; 
     }
 }
 
@@ -313,6 +492,10 @@ async function cargarPerfilUsuarioLateral() {
         const d = await obtenerDatosAutor(ID_USUARIO_LOGUEADO);
         document.querySelector('.nombre_top').textContent = d.nombre;
         document.querySelector('.usuario_top').textContent = d.handle;
+        if(d.foto) {
+            // Actualizar avatar lateral con timestamp para refrescar caché
+            document.querySelector('.avatar_top').src = `${d.foto}?t=${new Date().getTime()}`;
+        }
     } catch(e){}
 }
 
@@ -342,8 +525,41 @@ function configurarDropdown() {
 }
 
 // ==========================================
-// 5. INTERACCIONES (Likes, Publicar, Comentar) 💬
+// 6. INTERACCIONES 💬
 // ==========================================
+
+async function toggleSeguir(idDestino) {
+    const btn = document.getElementById('btn-relacion-perfil');
+    const spanSeguidores = document.getElementById('num-seguidores');
+    if(!btn) return;
+    btn.disabled = true; 
+    
+    try {
+        const res = await fetch('/api/relationship/follow', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id_solicitador: ID_USUARIO_LOGUEADO, id_receptor: idDestino })
+        });
+        const data = await res.json();
+        let cantActual = parseInt(spanSeguidores.textContent) || 0;
+
+        if (data.nuevo_estado === 'NO_SIGUE') {
+            btn.className = "btn_accion_perfil btn_seguir";
+            btn.innerHTML = '<i class="fa-solid fa-user-plus"></i> <span>Seguir</span>';
+            spanSeguidores.textContent = Math.max(0, cantActual - 1);
+        } else if (data.nuevo_estado === 'SIGUE') {
+            btn.className = "btn_accion_perfil btn_siguiendo";
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> <span>Siguiendo</span>';
+            spanSeguidores.textContent = cantActual + 1;
+        } else if (data.nuevo_estado === 'AMIGO') {
+            btn.className = "btn_accion_perfil btn_amigo";
+            btn.innerHTML = '<i class="fa-solid fa-user-group"></i> <span>Amigos</span>';
+            spanSeguidores.textContent = cantActual + 1;
+            alert("¡Ahora están conectados como amigos!");
+        }
+    } catch (error) { console.error(error); alert("Error de conexión"); } 
+    finally { btn.disabled = false; }
+}
 
 async function darLike(idPost, elementoDiv) {
     try {
@@ -367,43 +583,6 @@ async function darLike(idPost, elementoDiv) {
     } catch (error) {}
 }
 
-function configurarBotonPublicar() {
-    const btnPublicar = document.querySelector('.caja_crear_publicacion .boton_publicar');
-    const txtInput = document.getElementById('txt-publicacion');
-    const contador = document.getElementById('contador-caracteres');
-    
-    if (btnPublicar && txtInput) {
-        const nuevoBtn = btnPublicar.cloneNode(true); // Limpiar eventos anteriores
-        btnPublicar.parentNode.replaceChild(nuevoBtn, btnPublicar);
-        
-        nuevoBtn.addEventListener('click', async () => {
-            const contenido = txtInput.value.trim();
-            if (!contenido) return;
-            
-            nuevoBtn.textContent = '...'; 
-            nuevoBtn.disabled = true;
-            
-            try {
-                const res = await fetch('/api/publicar', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id_usuario: ID_USUARIO_LOGUEADO, contenido: contenido })
-                });
-                if (res.ok) { 
-                    txtInput.value = ''; 
-                    if(contador) contador.textContent = '200'; 
-                    await cargarPublicacionesInicio(); 
-                }
-            } catch (error) { alert('Error al publicar'); } 
-            finally { 
-                nuevoBtn.textContent = 'Publicar'; 
-                nuevoBtn.disabled = false; 
-            }
-        });
-    }
-}
-
-// --- MODAL DE COMENTARIOS ---
-
 async function abrirModalComentarios(idPost) {
     ID_POST_ACTUAL_EN_MODAL = idPost;
     const modal = document.getElementById('modal-comentarios');
@@ -417,17 +596,13 @@ async function abrirModalComentarios(idPost) {
     lista.innerHTML = '<p style="text-align:center">Cargando...</p>'; 
     input.value = '';
     if(contador) contador.textContent = '200'; 
-    
-    inicializarContadorComentarios(); // Reactivar contador del modal
+    inicializarContadorComentarios(); 
 
     try {
         const res = await fetch(`/api/comments/${idPost}`); 
         const comentarios = await res.json();
-        
         lista.innerHTML = '';
-        if (comentarios.length === 0) {
-            lista.innerHTML = '<p style="text-align:center;color:#999;margin-top:20px">Sé el primero en comentar.</p>';
-        }
+        if (comentarios.length === 0) lista.innerHTML = '<p style="text-align:center;color:#999;margin-top:20px">Sé el primero en comentar.</p>';
 
         for (const com of comentarios) {
             const autor = await obtenerDatosAutor(com.id_miembro);
@@ -464,8 +639,8 @@ async function enviarComentario() {
         });
         if(res.ok) { 
             input.value=''; 
-            abrirModalComentarios(ID_POST_ACTUAL_EN_MODAL); // Recargar comentarios
-            cargarPublicacionesInicio(); // Actualizar contador de afuera
+            abrirModalComentarios(ID_POST_ACTUAL_EN_MODAL); 
+            cargarPublicacionesInicio(); 
         }
     } catch(e) { alert('Error al enviar comentario'); }
 }
@@ -492,10 +667,8 @@ function inicializarContadorComentarios() {
     const contador = document.getElementById('contador-comentario');
     if(!input) return;
     
-    // Clonar para limpiar eventos
     const n = input.cloneNode(true); 
     input.parentNode.replaceChild(n, input); 
-    
     const nuevoInput = document.getElementById('input-nuevo-comentario');
     nuevoInput.focus();
     
@@ -505,8 +678,101 @@ function inicializarContadorComentarios() {
         contador.textContent=r; 
         contador.style.color=r===0?'red':'#4fc1e9'; 
     });
-    
-    nuevoInput.addEventListener('keypress', (e)=>{ 
-        if(e.key==='Enter') enviarComentario(); 
+    nuevoInput.addEventListener('keypress', (e)=>{ if(e.key==='Enter') enviarComentario(); });
+}
+
+// ==========================================
+// LÓGICA DEL BUSCADOR 🔍
+// ==========================================
+function configurarBuscador() {
+    const input = document.getElementById('input-busqueda-global');
+    const lista = document.getElementById('lista-resultados-busqueda');
+
+    if (!input || !lista) return;
+
+    // Evento al escribir
+    input.addEventListener('input', async (e) => {
+        const texto = e.target.value.trim();
+
+        if (texto.length === 0) {
+            lista.classList.add('oculto');
+            lista.innerHTML = '';
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/search?q=${texto}`);
+            const resultados = await res.json();
+
+            lista.innerHTML = ''; // Limpiar anteriores
+
+            if (resultados.length > 0) {
+                lista.classList.remove('oculto');
+                
+                resultados.forEach(item => {
+                    // Avatar fallback
+                    const avatar = item.foto ? item.foto : 'img/avatar_placeholder.png';
+                    
+                    const div = document.createElement('div');
+                    div.className = 'item_resultado';
+                    div.innerHTML = `
+                        <img src="${avatar}" class="avatar_resultado">
+                        <div class="info_resultado">
+                            <span class="nombre_resultado">${item.nombre}</span>
+                            <span class="usuario_resultado">@${item.usuario} • ${item.tipo}</span>
+                        </div>
+                    `;
+                    
+                    // Al hacer clic, ir al perfil y limpiar buscador
+                    div.addEventListener('click', () => {
+                        irAlPerfil(item.id);
+                        lista.classList.add('oculto');
+                        input.value = '';
+                    });
+
+                    lista.appendChild(div);
+                });
+            } else {
+                lista.classList.remove('oculto');
+                lista.innerHTML = '<div style="padding:10px; color:#777; text-align:center;">No hay resultados</div>';
+            }
+
+        } catch (error) {
+            console.error("Error buscando:", error);
+        }
     });
+
+    // Cerrar buscador si hago clic fuera
+    document.addEventListener('click', (e) => {
+        if (!input.contains(e.target) && !lista.contains(e.target)) {
+            lista.classList.add('oculto');
+        }
+    });
+}
+
+// FUNCIÓN PARA ELIMINAR EL POST
+async function eliminarPost(idPost) {
+    // 1. Preguntamos confirmación
+    if (!confirm("¿Seguro que quieres borrar esto?")) return;
+
+    try {
+        // 2. Llamamos al backend
+        const res = await fetch(`/api/post/${idPost}?id_usuario_actual=${ID_USUARIO_LOGUEADO}`, {
+            method: 'DELETE'
+        });
+
+        if (res.ok) {
+            // 3. Si funcionó, quitamos el post de la pantalla
+            const tarjeta = document.getElementById(`post-${idPost}`);
+            if (tarjeta) {
+                tarjeta.style.opacity = '0'; // Efecto visual
+                setTimeout(() => tarjeta.remove(), 500); // Lo borramos
+            }
+        } else {
+            alert("No se pudo eliminar.");
+        }
+    } catch (error) {
+        console.error(error);
+        alert("Error de conexión");
+    }
 }

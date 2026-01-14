@@ -13,7 +13,8 @@ const Miembro = sequelize.define('Miembro', {
         allowNull: false
     },
     foto_perfil: {
-        type: DataTypes.BLOB
+        type: DataTypes.STRING(255),
+    allowNull: true
     },
     tipo_miembro: {
         type: DataTypes.CHAR(1),
