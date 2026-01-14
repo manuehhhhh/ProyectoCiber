@@ -67,6 +67,23 @@
                         </div>
                     </div>
 
+                    <div class="form-section" id="networking-fields" style="display: none;">
+                        <label for="post-title" class="form-label">Título del Recurso</label>
+                        <input type="text" id="post-title" class="form-input" placeholder="Ej. Guía de Inicio Rápido de Vue.js">
+
+                        <label for="post-career" class="form-label">Dirigido a Carrera (Opcional)</label>
+                        <select id="post-career" class="form-select">
+                            <option value="">Selecciona una carrera...</option>
+                            <!-- Opciones de carrera se cargarán dinámicamente -->
+                        </select>
+
+                        <label for="post-language" class="form-label">Idioma del Recurso (Opcional)</label>
+                        <select id="post-language" class="form-select">
+                            <option value="">Selecciona un idioma...</option>
+                            <!-- Opciones de idioma se cargarán dinámicamente -->
+                        </select>
+                    </div>
+
                     <div class="post-actions">
                         <button class="boton_publicar" id="publish-post-btn">
                             <i class="fa-solid fa-paper-plane"></i> Publicar Post
