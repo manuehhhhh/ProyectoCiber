@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat de Grupos | Red Académica</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #6ca6e0; border-radius: 10px; }
+        .bg-chat-pattern { background-color: #e5e7eb; background-image: url("https://www.transparenttextures.com/patterns/cubes.png"); }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans h-screen overflow-hidden">
+
+    <div class="flex h-full">
+        <aside class="w-20 lg:w-64 bg-[#6ca6e0] text-white hidden md:flex flex-col shadow-xl">
+            <div class="p-6 text-center border-b border-blue-300">
+                <h2 class="text-xl font-bold hidden lg:block tracking-tighter text-white">RED SOCIAL</h2>
+                <i class="fas fa-graduation-cap text-2xl lg:hidden"></i>
+            </div>
+            <nav class="flex-grow mt-6">
+                <a href="#" class="flex items-center px-6 py-4 text-gray-100 hover:bg-white/10 transition-all">
+                    <i class="fas fa-folder-open w-8"></i> <span class="hidden lg:block">Recursos</span>
+                </a>
+                <a href="#" class="flex items-center px-6 py-4 bg-white/20 border-l-4 border-white">
+                    <i class="fas fa-comments w-8"></i> <span class="hidden lg:block font-bold">Chats de Grupo</span>
+                </a>
+                <a href="#" class="flex items-center px-6 py-4 text-gray-100 hover:bg-white/10 transition-all">
+                    <i class="fas fa-users w-8"></i> <span class="hidden lg:block">Miembros</span>
+                </a>
+            </nav>
+        </aside>
+
+        <div class="w-full md:w-80 bg-white border-r flex flex-col shadow-inner">
+            <div class="p-4 border-b">
+                <h2 class="text-xl font-bold text-gray-800">Mis Grupos</h2>
+                <div class="relative mt-2">
+                    <input type="text" placeholder="Filtrar grupos..." class="w-full pl-8 pr-4 py-2 bg-gray-100 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-300">
+                    <i class="fas fa-search absolute left-3 top-3 text-gray-400 text-xs"></i>
+                </div>
+            </div>
+            <div class="flex-grow overflow-y-auto custom-scrollbar" id="lista-grupos">
+                <div class="p-8 text-center text-gray-400 italic text-sm">Cargando comunidades...</div>
+            </div>
+        </div>
+
+        <main class="hidden md:flex flex-grow flex-col bg-chat-pattern">
+            <header class="bg-white h-16 border-b shadow-sm flex items-center justify-between px-6 z-10">
+                <div class="flex items-center gap-3">
+                    <div id="chat-icon" class="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center text-white">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div>
+                        <h3 id="nombre-grupo-activo" class="font-bold text-gray-800 leading-tight underline decoration-blue-300">Selecciona un grupo</h3>
+                        <p id="info-grupo-activo" class="text-xs text-gray-400">Tipo: --- | Miembros: 0</p>
+                    </div>
+                </div>
+                <div class="flex gap-4 text-gray-400">
+                    <button class="hover:text-blue-500"><i class="fas fa-info-circle"></i></button>
+                    <button class="hover:text-blue-500"><i class="fas fa-ellipsis-v"></i></button>
+                </div>
+            </header>
+
+            <div class="flex-grow overflow-y-auto p-6 space-y-4 custom-scrollbar" id="contenedor-mensajes">
+                <div class="flex flex-col items-center justify-center h-full text-gray-500">
+                    <div class="bg-white/80 p-6 rounded-full shadow-sm mb-4">
+                        <i class="fas fa-paper-plane text-4xl text-blue-300"></i>
+                    </div>
+                    <p class="font-medium">Selecciona un grupo de la izquierda para comenzar a chatear</p>
+                </div>
+            </div>
+
+            <footer class="bg-white p-4 border-t flex items-center gap-4 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
+                <button class="text-gray-400 hover:text-blue-500 text-xl"><i class="fas fa-plus-circle"></i></button>
+                <div class="flex-grow">
+                    <input id="input-mensaje" type="text" placeholder="Escribe un mensaje académico..." class="w-full bg-gray-100 py-3 px-4 rounded-xl outline-none focus:ring-2 focus:ring-blue-400 text-sm">
+                </div>
+                <button id="btn-enviar" class="bg-[#4fc1e9] text-white p-3 rounded-xl hover:bg-blue-600 shadow-md transition-all">
+                    <i class="fas fa-location-arrow"></i>
+                </button>
+            </footer>
+        </main>
+    </div>
+
+    <script>
+        const API_URL = "http://localhost:8000/api/grupo/";
+
+        async function cargarChats() {
+            const lista = document.getElementById('lista-grupos');
+            try {
+                const response = await fetch(API_URL);
+                const grupos = await response.json();
+
+                lista.innerHTML = "";
+                grupos.forEach(g => {
+                    const colorTipo = g.tipo_grupo === 'Publico' ? 'text-green-500' : 'text-amber-500';
+                    
+                    lista.innerHTML += `
+                        <div onclick="seleccionarChat(${g.id_grupo}, '${g.tipo_grupo}', ${g.cantidad_miembro})" 
+                             class="p-4 border-b hover:bg-blue-50 cursor-pointer transition-all flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-full bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-500 font-bold">
+                                G${g.id_grupo}
+                            </div>
+                            <div class="flex-grow overflow-hidden">
+                                <div class="flex justify-between items-center">
+                                    <h4 class="font-bold text-gray-700 truncate">Comunidad ${g.id_grupo}</h4>
+                                    <span class="text-[10px] text-gray-400 uppercase font-black">${g.tipo_grupo}</span>
+                                </div>
+                                <p class="text-xs text-gray-500 truncate italic">${g.descripcion_grupo || 'Sin descripción...'}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch (error) {
+                lista.innerHTML = `<div class="p-4 text-red-500 text-xs text-center font-bold">Error al cargar API</div>`;
+            }
+        }
+
+        function seleccionarChat(id, tipo, miembros) {
+            document.getElementById('nombre-grupo-activo').innerText = "Comunidad Académica #" + id;
+            document.getElementById('info-grupo-activo').innerText = `Tipo: ${tipo} | Miembros activos: ${miembros}`;
+            
+            // Simulación de mensajes
+            const msgContenedor = document.getElementById('contenedor-mensajes');
+            msgContenedor.innerHTML = `
+                <div class="flex justify-center mb-4">
+                    <span class="bg-blue-100 text-blue-600 text-[10px] px-3 py-1 rounded-full font-bold uppercase tracking-widest">Hoy</span>
+                </div>
+                <div class="flex items-end gap-2 max-w-[80%]">
+                    <div class="w-8 h-8 rounded-full bg-gray-300 flex-shrink-0 flex items-center justify-center text-xs">U1</div>
+                    <div class="bg-white p-3 rounded-2xl rounded-bl-none shadow-sm text-sm text-gray-700">
+                        ¡Hola! Bienvenidos al grupo de tipo <b>${tipo}</b>. ¿Alguien tiene el material de la clase?
+                    </div>
+                </div>
+                <div class="flex items-end gap-2 max-w-[80%] ml-auto flex-row-reverse">
+                    <div class="w-8 h-8 rounded-full bg-blue-500 flex-shrink-0 flex items-center justify-center text-xs text-white italic font-bold">Yo</div>
+                    <div class="bg-[#6ca6e0] p-3 rounded-2xl rounded-br-none shadow-sm text-sm text-white">
+                        Hola, estoy revisando el repositorio de Recursos para subirlo.
+                    </div>
+                </div>
+            `;
+        }
+
+        document.addEventListener('DOMContentLoaded', cargarChats);
+    </script>
+</body>
+</html>
