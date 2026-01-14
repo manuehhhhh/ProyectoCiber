@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalles del Grupo | Red Académica</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+    <nav class="bg-[#6ca6e0] p-4 text-white shadow-md">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-arrow-left cursor-pointer hover:text-blue-100" onclick="history.back()"></i>
+                <h1 class="font-bold uppercase tracking-tight">Información de la Comunidad</h1>
+            </div>
+            <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                <i class="fas fa-ellipsis-v"></i>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-4xl mx-auto p-6 -mt-4">
+        <div class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+            <div class="h-32 bg-gradient-to-r from-[#6ca6e0] to-[#4fc1e9]"></div>
+            
+            <div class="px-8 pb-8">
+                <div class="relative flex justify-between items-end -mt-12">
+                    <div class="p-2 bg-white rounded-2xl shadow-lg">
+                        <div class="w-24 h-24 bg-blue-500 rounded-xl flex items-center justify-center text-white text-4xl shadow-inner">
+                            <i class="fas fa-users"></i>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 mb-2">
+                        <button class="bg-[#4fc1e9] text-white px-6 py-2 rounded-full font-bold shadow-md hover:bg-blue-600 transition-all">
+                            Unirme al Grupo
+                        </button>
+                        <button class="bg-gray-100 text-gray-500 p-2 rounded-full hover:bg-gray-200">
+                            <i class="fas fa-share-alt"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mt-6">
+                    <div class="flex items-center gap-3">
+                        <h2 id="nombre-grupo" class="text-3xl font-black text-gray-800">Comunidad #<span id="id-display">--</span></h2>
+                        <span id="badge-tipo" class="px-3 py-1 rounded-full text-xs font-black border uppercase tracking-widest">---</span>
+                    </div>
+                    <p class="text-gray-400 mt-1 flex items-center gap-2">
+                        <i class="fas fa-calendar-alt"></i> Creado recientemente • <span id="miembros-display">0</span> miembros activos
+                    </p>
+                    
+                    <div class="mt-8 border-t border-gray-100 pt-6">
+                        <h3 class="text-sm font-bold text-[#6ca6e0] uppercase mb-2">Sobre este grupo</h3>
+                        <p id="descripcion-display" class="text-gray-600 leading-relaxed text-lg italic">
+                            Cargando descripción detallada...
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-center">
+                <div class="text-blue-400 mb-2 text-2xl"><i class="fas fa-user-shield"></i></div>
+                <div class="text-2xl font-black text-gray-800" id="tipo-val">---</div>
+                <div class="text-[10px] text-gray-400 uppercase font-bold">Privacidad</div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-center">
+                <div class="text-green-400 mb-2 text-2xl"><i class="fas fa-users"></i></div>
+                <div class="text-2xl font-black text-gray-800" id="miembros-val">0</div>
+                <div class="text-[10px] text-gray-400 uppercase font-bold">Capacidad Actual</div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-center">
+                <div class="text-purple-400 mb-2 text-2xl"><i class="fas fa-file-alt"></i></div>
+                <div class="text-2xl font-black text-gray-800">12+</div>
+                <div class="text-[10px] text-gray-400 uppercase font-bold">Recursos Compartidos</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simulamos obtener el ID de la URL (ej: grupo.html?id=5)
+        const urlParams = new URLSearchParams(window.location.search);
+        const grupoId = urlParams.get('id') || 1; 
+
+        async function cargarInfoGrupo() {
+            try {
+                // Consultamos a tu API de Sequelize
+                const response = await fetch(`http://localhost:8000/api/grupo/${grupoId}`);
+                const g = await response.json();
+
+                // Llenar datos en el HTML
+                document.getElementById('id-display').innerText = g.id_grupo;
+                document.getElementById('miembros-display').innerText = g.cantidad_miembro;
+                document.getElementById('miembros-val').innerText = g.cantidad_miembro;
+                document.getElementById('descripcion-display').innerText = g.descripcion_grupo || "Esta comunidad aún no cuenta con una descripción detallada.";
+                document.getElementById('tipo-val').innerText = g.tipo_grupo;
+
+                // Estilo del badge según tipo
+                const badge = document.getElementById('badge-tipo');
+                badge.innerText = g.tipo_grupo;
+                if(g.tipo_grupo === 'Publico') {
+                    badge.classList.add('bg-green-50', 'text-green-600', 'border-green-200');
+                } else if(g.tipo_grupo === 'Privado') {
+                    badge.classList.add('bg-amber-50', 'text-amber-600', 'border-amber-200');
+                } else {
+                    badge.classList.add('bg-red-50', 'text-red-600', 'border-red-200');
+                }
+
+            } catch (error) {
+                console.error("Error cargando el grupo:", error);
+                document.getElementById('descripcion-display').innerHTML = 
+                    "<span class='text-red-400'>No se pudo conectar con el servidor para obtener los detalles.</span>";
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', cargarInfoGrupo);
+    </script>
+</body>
+</html>
