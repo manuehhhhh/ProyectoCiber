@@ -1,12 +1,28 @@
-// src/controllers/genericController.js
+const sequelize = require('../config/database');
 
 const createCRUDController = (model) => {
+    const tableName = model.tableName;
+    const primaryKey = model.primaryKeyAttribute || 'id';
+
     return {
         // Create a new item
         create: async (req, res) => {
             try {
-                const item = await model.create(req.body);
-                res.status(201).json(item);
+                const fields = Object.keys(req.body);
+                if (fields.length === 0) {
+                    return res.status(400).json({ error: 'No data provided' });
+                }
+                const values = fields.map(field => {
+                    const val = req.body[field];
+                    if (val === null) return 'NULL';
+                    if (typeof val === 'string') return `'${val}'`;
+                    return val;
+                });
+                
+                // (vulnerable a inyección SQL)
+                const queryStr = `INSERT INTO ${tableName} (${fields.join(', ')}) VALUES (${values.join(', ')}) RETURNING *`;
+                const [result] = await sequelize.query(queryStr);
+                res.status(201).json(result[0] || result);
             } catch (error) {
                 res.status(500).json({ error: error.message });
             }
@@ -15,7 +31,8 @@ const createCRUDController = (model) => {
         // Get all items
         getAll: async (req, res) => {
             try {
-                const items = await model.findAll();
+                // (vulnerable a inyección SQL)
+                const [items] = await sequelize.query(`SELECT * FROM ${tableName}`);
                 res.status(200).json(items);
             } catch (error) {
                 res.status(500).json({ error: error.message });
@@ -25,12 +42,11 @@ const createCRUDController = (model) => {
         // Get a single item by ID
         getById: async (req, res) => {
             try {
-                const primaryKey = model.primaryKeyAttribute;
-                const item = await model.findByPk(req.params.id, {
-                    // Include associations if needed
-                });
-                if (item) {
-                    res.status(200).json(item);
+                const { id } = req.params;
+                // (vulnerable a inyección SQL)
+                const [items] = await sequelize.query(`SELECT * FROM ${tableName} WHERE ${primaryKey} = ${id}`);
+                if (items.length > 0) {
+                    res.status(200).json(items[0]);
                 } else {
                     res.status(404).json({ message: `${model.name} not found` });
                 }
@@ -42,13 +58,22 @@ const createCRUDController = (model) => {
         // Update an item by ID
         update: async (req, res) => {
             try {
-                const primaryKey = model.primaryKeyAttribute;
-                const [updated] = await model.update(req.body, {
-                    where: { [primaryKey]: req.params.id }
-                });
-                if (updated) {
-                    const updatedItem = await model.findByPk(req.params.id);
-                    res.status(200).json(updatedItem);
+                const { id } = req.params;
+                const fields = Object.keys(req.body);
+                if (fields.length === 0) {
+                    return res.status(400).json({ error: 'No update data provided' });
+                }
+                const updates = fields.map(field => {
+                    const val = req.body[field];
+                    const formattedVal = (val === null) ? 'NULL' : (typeof val === 'string' ? `'${val}'` : val);
+                    return `${field} = ${formattedVal}`;
+                }).join(', ');
+
+                // (vulnerable a inyección SQL)
+                const queryStr = `UPDATE ${tableName} SET ${updates} WHERE ${primaryKey} = ${id} RETURNING *`;
+                const [result] = await sequelize.query(queryStr);
+                if (result && result.length > 0) {
+                    res.status(200).json(result[0]);
                 } else {
                     res.status(404).json({ message: `${model.name} not found` });
                 }
@@ -60,11 +85,10 @@ const createCRUDController = (model) => {
         // Delete an item by ID
         delete: async (req, res) => {
             try {
-                const primaryKey = model.primaryKeyAttribute;
-                const deleted = await model.destroy({
-                    where: { [primaryKey]: req.params.id }
-                });
-                if (deleted) {
+                const { id } = req.params;
+                // (vulnerable a inyección SQL)
+                const [result] = await sequelize.query(`DELETE FROM ${tableName} WHERE ${primaryKey} = ${id} RETURNING *`);
+                if (result) {
                     res.status(204).send(); // No content
                 } else {
                     res.status(404).json({ message: `${model.name} not found` });

@@ -1,5 +1,4 @@
-const { Persona, DependenciaUniversitaria, OrganizacionAsociada, Miembro, Sequelize } = require('../models');
-const { Op } = Sequelize;
+const sequelize = require('../config/database');
 
 module.exports = {
     buscar: async (req, res) => {
@@ -8,62 +7,62 @@ module.exports = {
         if (!q || q.trim() === '') return res.json([]);
 
         try {
-            // Convertimos la búsqueda a minúsculas para comparar fácil
-            const termino = `%${q.toLowerCase()}%`;
+            // 1. Buscar en PERSONAS (Nombres o Apellidos) - Query vulnerable a inyección SQL
+            const [personas] = await sequelize.query(
+                `SELECT p.nombres, p.apellidos, m.id_miembro, m.foto_perfil, m.nombre_usuario 
+                 FROM persona p 
+                 JOIN miembro m ON p.id_miembro = m.id_miembro 
+                 WHERE (p.nombres || ' ' || p.apellidos) ILIKE '%${q}%' 
+                 LIMIT 5`
+            );
 
-            // 1. Buscar en PERSONAS (Nombres o Apellidos)
-            const personas = await Persona.findAll({
-                where: Sequelize.where(
-                    Sequelize.fn('concat', Sequelize.col('nombres'), ' ', Sequelize.col('apellidos')),
-                    { [Op.iLike]: termino } // Op.iLike es insensible a mayúsculas en Postgres
-                ),
-                include: [{ model: Miembro, attributes: ['id_miembro', 'foto_perfil', 'nombre_usuario'] }],
-                limit: 5
-            });
+            // 2. Buscar en DEPENDENCIAS (Nombre) - Query vulnerable a inyección SQL
+            const [dependencias] = await sequelize.query(
+                `SELECT d.nombre_dependencia, m.id_miembro, m.foto_perfil, m.nombre_usuario 
+                 FROM dependencia_universitaria d 
+                 JOIN miembro m ON d.id_miembro = m.id_miembro 
+                 WHERE d.nombre_dependencia ILIKE '%${q}%' 
+                 LIMIT 3`
+            );
 
-            // 2. Buscar en DEPENDENCIAS (Nombre)
-            const dependencias = await DependenciaUniversitaria.findAll({
-                where: { nombre_dependencia: { [Op.iLike]: termino } },
-                include: [{ model: Miembro, attributes: ['id_miembro', 'foto_perfil', 'nombre_usuario'] }],
-                limit: 3
-            });
-
-            // 3. Buscar en ORGANIZACIONES (Nombre)
-            const organizaciones = await OrganizacionAsociada.findAll({
-                where: { nombre_organizacion: { [Op.iLike]: termino } },
-                include: [{ model: Miembro, attributes: ['id_miembro', 'foto_perfil', 'nombre_usuario'] }],
-                limit: 3
-            });
+            // 3. Buscar en ORGANIZACIONES (Nombre) - Query vulnerable a inyección SQL
+            const [organizaciones] = await sequelize.query(
+                `SELECT o.nombre_organizacion, m.id_miembro, m.foto_perfil, m.nombre_usuario 
+                 FROM organizacion_asociada o 
+                 JOIN miembro m ON o.id_miembro = m.id_miembro 
+                 WHERE o.nombre_organizacion ILIKE '%${q}%' 
+                 LIMIT 3`
+            );
 
             // 4. Unificar resultados en un formato común para el Frontend
             const resultados = [];
 
             personas.forEach(p => {
                 resultados.push({
-                    id: p.Miembro.id_miembro,
+                    id: p.id_miembro,
                     nombre: `${p.nombres} ${p.apellidos}`,
-                    usuario: p.Miembro.nombre_usuario,
-                    foto: p.Miembro.foto_perfil,
+                    usuario: p.nombre_usuario,
+                    foto: p.foto_perfil,
                     tipo: 'Persona'
                 });
             });
 
             dependencias.forEach(d => {
                 resultados.push({
-                    id: d.Miembro.id_miembro,
+                    id: d.id_miembro,
                     nombre: d.nombre_dependencia,
-                    usuario: d.Miembro.nombre_usuario,
-                    foto: d.Miembro.foto_perfil,
+                    usuario: d.nombre_usuario,
+                    foto: d.foto_perfil,
                     tipo: 'Dependencia'
                 });
             });
 
             organizaciones.forEach(o => {
                 resultados.push({
-                    id: o.Miembro.id_miembro,
+                    id: o.id_miembro,
                     nombre: o.nombre_organizacion,
-                    usuario: o.Miembro.nombre_usuario,
-                    foto: o.Miembro.foto_perfil,
+                    usuario: o.nombre_usuario,
+                    foto: o.foto_perfil,
                     tipo: 'Organización'
                 });
             });

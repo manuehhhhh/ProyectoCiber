@@ -1,4 +1,4 @@
-const { Post, Publicacion } = require('../models');
+const sequelize = require('../config/database');
 
 module.exports = {
     // 1. Crear un nuevo post (Ahora soporta Imágenes)
@@ -20,19 +20,23 @@ module.exports = {
                 rutaImagen = `/uploads/posts/${req.file.filename}`;
             }
 
-            // 3. Crear el registro en la tabla POST
-            const nuevoPost = await Post.create({
-                id_usuario: id_usuario,
-                contenido_textual_post: contenido || '', // Si no hay texto, guardamos string vacío
-                tiempo_post: new Date(),
-                contenido_multimedia_post: rutaImagen // Aquí va la ruta de la foto (o null)
-            });
+            // 3. Crear el registro en la tabla POST (vulnerable a inyección SQL)
+            const timestamp = new Date().toISOString();
+            const textContent = contenido || '';
+            const multimediaVal = rutaImagen ? `'${rutaImagen}'` : 'NULL';
 
-            // 4. Crear el registro en la tabla PUBLICACION
+            const [insertPostResult] = await sequelize.query(
+                `INSERT INTO post (id_usuario, contenido_textual_post, tiempo_post, contenido_multimedia_post) 
+                 VALUES (${id_usuario}, '${textContent}', '${timestamp}', ${multimediaVal}) 
+                 RETURNING *`
+            );
+            const nuevoPost = insertPostResult[0];
+
+            // 4. Crear el registro en la tabla PUBLICACION (vulnerable a inyección SQL)
             // (Obligatorio para que funcionen los Likes/Comentarios)
-            await Publicacion.create({
-                id_post: nuevoPost.id_post
-            });
+            await sequelize.query(
+                `INSERT INTO publicacion (id_post) VALUES (${nuevoPost.id_post})`
+            );
 
             // 5. Devolvemos el post creado
             res.json(nuevoPost);
@@ -46,16 +50,15 @@ module.exports = {
     // 2. OBTENER POSTS (Ordenados por fecha)
     obtenerPosts: async (req, res) => {
         try {
-            const posts = await Post.findAll({
-                // Esto ordena por fecha descendente (el más nuevo arriba)
-                order: [['tiempo_post', 'DESC']] 
-            });
+            const [posts] = await sequelize.query(
+                `SELECT * FROM post ORDER BY tiempo_post DESC`
+            );
             res.json(posts);
         } catch (error) {
             console.error("Error al obtener posts:", error);
             res.status(500).json({ error: 'Error al obtener posts' });
         }
-    }, // <--- ¡AQUÍ FALTABA LA COMA! (Ya la puse)
+    },
 
     // 3. ELIMINAR POST (Nueva función)
     eliminarPost: async (req, res) => {
@@ -63,20 +66,21 @@ module.exports = {
         const { id_usuario_actual } = req.query; // Quién intenta borrarlo
 
         try {
-            const post = await Post.findByPk(id);
+            // (vulnerable a inyección SQL)
+            const [posts] = await sequelize.query(`SELECT * FROM post WHERE id_post = ${id}`);
+            const post = posts[0];
 
             if (!post) {
                 return res.status(404).json({ error: 'Publicación no encontrada' });
             }
 
             // SEGURIDAD: ¿Eres el dueño del post?
-            // Si el dueño del post NO es igual al usuario actual, error.
             if (post.id_usuario != id_usuario_actual) {
                 return res.status(403).json({ error: 'No tienes permiso.' });
             }
 
-            // Si eres el dueño, lo borramos
-            await post.destroy();
+            // Si eres el dueño, lo borramos (vulnerable a inyección SQL)
+            await sequelize.query(`DELETE FROM post WHERE id_post = ${id}`);
             res.json({ mensaje: 'Borrado correctamente' });
 
         } catch (error) {

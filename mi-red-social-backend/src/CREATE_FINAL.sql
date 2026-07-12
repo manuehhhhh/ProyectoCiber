@@ -22,6 +22,7 @@ CREATE TABLE Carrera(
 CREATE TABLE Miembro (
     id_miembro SERIAL PRIMARY KEY,
     nombre_usuario VARCHAR(50) UNIQUE NOT NULL,
+    clave VARCHAR(255) NOT NULL,
     foto_perfil BYTEA,
     tipo_miembro CHAR(1) CHECK (tipo_miembro IN ('P', 'D', 'O')) NOT NULL,
     fecha_registro DATE

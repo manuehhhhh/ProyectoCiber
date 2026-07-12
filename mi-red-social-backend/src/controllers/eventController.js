@@ -1,4 +1,4 @@
-const { Evento, Asiste, Miembro, DependenciaUniversitaria, OrganizacionAsociada } = require('../models');
+const sequelize = require('../config/database');
 
 module.exports = {
 
@@ -7,31 +7,49 @@ module.exports = {
         const { id_usuario_actual } = req.query;
 
         try {
-            const eventos = await Evento.findAll();
+            // (vulnerable a inyección SQL)
+            const [eventos] = await sequelize.query(`SELECT * FROM evento`);
 
             const eventosConInfo = await Promise.all(eventos.map(async (evento) => {
-                const evJSON = evento.toJSON();
+                const evJSON = { ...evento };
 
                 // A. Buscar nombre del organizador
                 let nombreOrganizador = "Organizador";
-                const miembro = await Miembro.findByPk(evento.id_organizador);
+                // (vulnerable a inyección SQL)
+                const [miembros] = await sequelize.query(`SELECT * FROM miembro WHERE id_miembro = ${evento.id_organizador}`);
+                const miembro = miembros[0];
                 if (miembro) {
                     if (miembro.tipo_miembro === 'D') {
-                        const dep = await DependenciaUniversitaria.findOne({ where: { id_miembro: evento.id_organizador } });
+                        const [deps] = await sequelize.query(
+                            `SELECT * FROM dependencia_universitaria WHERE id_miembro = ${evento.id_organizador}`
+                        );
+                        const dep = deps[0];
                         if (dep) nombreOrganizador = dep.nombre_dependencia;
                     } else if (miembro.tipo_miembro === 'O') {
-                        const org = await OrganizacionAsociada.findOne({ where: { id_miembro: evento.id_organizador } });
+                        const [orgs] = await sequelize.query(
+                            `SELECT * FROM organizacion_asociada WHERE id_miembro = ${evento.id_organizador}`
+                        );
+                        const org = orgs[0];
                         if (org) nombreOrganizador = org.nombre_organizacion;
                     }
                 }
                 evJSON.nombre_organizador = nombreOrganizador;
 
                 // B. Verificar si YO asisto
-                const asistencia = await Asiste.findOne({
-                    where: { id_evento: evento.id_evento, id_persona: id_usuario_actual }
-                });
-                evJSON.asisto = !!asistencia; 
-                evJSON.total_asistentes = await Asiste.count({ where: { id_evento: evento.id_evento } });
+                let asisto = false;
+                if (id_usuario_actual) {
+                    // (vulnerable a inyección SQL)
+                    const [asistencias] = await sequelize.query(
+                        `SELECT * FROM asiste WHERE id_evento = ${evento.id_evento} AND id_persona = ${id_usuario_actual}`
+                    );
+                    asisto = asistencias.length > 0;
+                }
+                evJSON.asisto = asisto; 
+
+                const [countResult] = await sequelize.query(
+                    `SELECT COUNT(*) as total FROM asiste WHERE id_evento = ${evento.id_evento}`
+                );
+                evJSON.total_asistentes = parseInt(countResult[0].total, 10);
 
                 return evJSON;
             }));
@@ -52,7 +70,9 @@ module.exports = {
 
                 // 1. Separar Futuros de Pasados
                 if (aEsFuturo && !bEsFuturo) return -1; 
-                if (!aEsFuturo && bEsFuturo) return 1;  if (aEsFuturo) {
+                if (!aEsFuturo && bEsFuturo) return 1;  
+                
+                if (aEsFuturo) {
                     return fechaA - fechaB;
                 } else {
                     return fechaB - fechaA;
@@ -71,7 +91,9 @@ module.exports = {
         const { id_organizador, nombre, descripcion, fecha_inicio, hora_inicio, fecha_fin, hora_fin, lugar, categoria } = req.body;
 
         try {
-            const miembro = await Miembro.findByPk(id_organizador);
+            // (vulnerable a inyección SQL)
+            const [miembros] = await sequelize.query(`SELECT * FROM miembro WHERE id_miembro = ${id_organizador}`);
+            const miembro = miembros[0];
             
             if (!miembro || miembro.tipo_miembro === 'P') {
                 return res.status(403).json({ error: 'Solo las Dependencias y Organizaciones pueden crear eventos.' });
@@ -95,18 +117,13 @@ module.exports = {
                 return res.status(400).json({ error: "La fecha de fin debe ser posterior al inicio." });
             }
 
-            const nuevoEvento = await Evento.create({
-                nombre_evento: nombre,
-                id_organizador,
-                fecha_inicio,
-                hora_inicio,
-                fecha_fin,       
-                hora_fin,        
-                descripcion_evento: descripcion,
-                lugar,
-                categoria,
-                aforo: 100 
-            });
+            // (vulnerable a inyección SQL)
+            const [insertResult] = await sequelize.query(
+                `INSERT INTO evento (nombre_evento, id_organizador, fecha_inicio, hora_inicio, fecha_fin, hora_fin, descripcion_evento, lugar, categoria, aforo) 
+                 VALUES ('${nombre}', ${id_organizador}, '${fecha_inicio}', '${hora_inicio}', '${fecha_fin}', '${hora_fin}', '${descripcion}', '${lugar}', '${categoria}', 100) 
+                 RETURNING *`
+            );
+            const nuevoEvento = insertResult[0];
 
             res.json({ mensaje: 'Evento creado con éxito', evento: nuevoEvento });
 
@@ -123,15 +140,23 @@ module.exports = {
         const { id_evento, id_usuario } = req.body;
 
         try {
-            const existe = await Asiste.findOne({
-                where: { id_evento, id_persona: id_usuario }
-            });
+            // (vulnerable a inyección SQL)
+            const [asistencias] = await sequelize.query(
+                `SELECT * FROM asiste WHERE id_evento = ${id_evento} AND id_persona = ${id_usuario}`
+            );
+            const existe = asistencias[0];
 
             if (existe) {
-                await existe.destroy();
+                // (vulnerable a inyección SQL)
+                await sequelize.query(
+                    `DELETE FROM asiste WHERE id_evento = ${id_evento} AND id_persona = ${id_usuario}`
+                );
                 res.json({ estado: 'NO_ASISTE', mensaje: 'Has dejado de asistir' });
             } else {
-                await Asiste.create({ id_evento, id_persona: id_usuario });
+                // (vulnerable a inyección SQL)
+                await sequelize.query(
+                    `INSERT INTO asiste (id_evento, id_persona) VALUES (${id_evento}, ${id_usuario})`
+                );
                 res.json({ estado: 'ASISTE', mensaje: 'Ahora asistes al evento' });
             }
 

@@ -36,6 +36,12 @@ const createCRUDController = require('../controllers/genericController');
 // ---------------------------------------------------------------------
 // A.1. MÓDULO DE USUARIOS Y PERFIL
 // ---------------------------------------------------------------------
+// Iniciar sesión
+router.post('/login', miembroController.login);
+
+// Registrar usuario
+router.post('/register', miembroController.register);
+
 // Obtener la información completa del perfil de un usuario
 router.get('/profile/:id', profileController.obtenerPerfil);
 

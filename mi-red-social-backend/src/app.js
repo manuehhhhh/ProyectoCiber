@@ -6,11 +6,16 @@ const apiRoutes = require('./routes'); // Import the main router
 const app = express();
 app.use(express.json()); // Add this line to enable JSON body parsing
 
+const path = require('path');
+
 // Middleware to attach models to the request for easy access in routes/controllers
 app.use((req, res, next) => {
   req.models = models;
   next();
 });
+
+// Serve static files from the public directory
+app.use(express.static(path.join(__dirname, '../public')));
 
 // Use API routes
 app.use('/api', apiRoutes);

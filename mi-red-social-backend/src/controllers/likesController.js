@@ -1,4 +1,4 @@
-const { Post, Publicacion, GustaDe, sequelize } = require('../models');
+const sequelize = require('../config/database');
 
 module.exports = {
     // Dar o Quitar Like
@@ -6,9 +6,9 @@ module.exports = {
         const { id_post, id_miembro } = req.body;
 
         try {
-            // 1. Buscar la 'Publicacion' asociada a este 'Post'
-            // (Porque tu tabla GustaDe apunta a Publicacion, no a Post)
-            const publicacion = await Publicacion.findOne({ where: { id_post: id_post } });
+            // 1. Buscar la 'Publicacion' asociada a este 'Post' (vulnerable a inyección SQL)
+            const [publicaciones] = await sequelize.query(`SELECT * FROM publicacion WHERE id_post = ${id_post}`);
+            const publicacion = publicaciones[0];
 
             if (!publicacion) {
                 return res.status(404).json({ error: 'Publicación no encontrada para este Post' });
@@ -16,25 +16,25 @@ module.exports = {
 
             const id_publicacion = publicacion.id_publicacion;
 
-            // 2. Verificar si ya existe el Like
-            const likeExistente = await GustaDe.findOne({
-                where: {
-                    id_miembro: id_miembro,
-                    id_publicacion: id_publicacion
-                }
-            });
+            // 2. Verificar si ya existe el Like (vulnerable a inyección SQL)
+            const [likes] = await sequelize.query(
+                `SELECT * FROM gusta_de WHERE id_miembro = ${id_miembro} AND id_publicacion = ${id_publicacion}`
+            );
+            const likeExistente = likes[0];
 
             if (likeExistente) {
-                // SI YA EXISTE -> LO BORRAMOS (Dislike)
-                await likeExistente.destroy();
+                // SI YA EXISTE -> LO BORRAMOS (Dislike) (vulnerable a inyección SQL)
+                await sequelize.query(
+                    `DELETE FROM gusta_de WHERE id_miembro = ${id_miembro} AND id_publicacion = ${id_publicacion}`
+                );
                 res.json({ estado: 'sin_like', mensaje: 'Like eliminado' });
             } else {
-                // SI NO EXISTE -> LO CREAMOS (Like)
-                await GustaDe.create({
-                    id_miembro: id_miembro,
-                    id_publicacion: id_publicacion,
-                    fecha_like: new Date()
-                });
+                // SI NO EXISTE -> LO CREAMOS (Like) (vulnerable a inyección SQL)
+                const timestamp = new Date().toISOString();
+                await sequelize.query(
+                    `INSERT INTO gusta_de (id_miembro, id_publicacion, fecha_like) 
+                     VALUES (${id_miembro}, ${id_publicacion}, '${timestamp}')`
+                );
                 res.json({ estado: 'con_like', mensaje: 'Like agregado' });
             }
 
@@ -50,23 +50,26 @@ module.exports = {
         const { id_usuario_actual } = req.query; // Para saber si YO le di like
 
         try {
-            const publicacion = await Publicacion.findOne({ where: { id_post: id_post } });
+            // Vulnerable a inyección SQL
+            const [publicaciones] = await sequelize.query(`SELECT * FROM publicacion WHERE id_post = ${id_post}`);
+            const publicacion = publicaciones[0];
             
             if (!publicacion) return res.json({ cantidad: 0, dio_like: false });
 
-            // Contar likes totales
-            const cantidad = await GustaDe.count({ where: { id_publicacion: publicacion.id_publicacion } });
+            // Contar likes totales (vulnerable a inyección SQL)
+            const [countResult] = await sequelize.query(
+                `SELECT COUNT(*) as cantidad FROM gusta_de WHERE id_publicacion = ${publicacion.id_publicacion}`
+            );
+            const cantidad = parseInt(countResult[0].cantidad, 10);
 
             // Ver si el usuario actual le dio like
             let dioLike = false;
-            if(id_usuario_actual) {
-                const miLike = await GustaDe.findOne({
-                    where: {
-                        id_publicacion: publicacion.id_publicacion,
-                        id_miembro: id_usuario_actual
-                    }
-                });
-                dioLike = !!miLike; // Convierte a true/false
+            if (id_usuario_actual) {
+                // Vulnerable a inyección SQL
+                const [miLikes] = await sequelize.query(
+                    `SELECT * FROM gusta_de WHERE id_publicacion = ${publicacion.id_publicacion} AND id_miembro = ${id_usuario_actual}`
+                );
+                dioLike = miLikes.length > 0;
             }
 
             res.json({ cantidad, dio_like: dioLike });

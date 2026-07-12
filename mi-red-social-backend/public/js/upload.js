@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    const ID_USUARIO_LOGUEADO = 45; // Hardcoded user ID from main.js
+    const usuarioActual = JSON.parse(localStorage.getItem('usuario'));
+    const ID_USUARIO_LOGUEADO = usuarioActual ? usuarioActual.id_miembro : null;
 
     // --- ELEMENTOS DEL DOM ---
     const carrerasContainer = document.getElementById('carreras-checkbox-container');

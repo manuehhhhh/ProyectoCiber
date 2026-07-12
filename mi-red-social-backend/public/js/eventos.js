@@ -277,7 +277,7 @@ async function guardarEvento() {
 
     // 1. VALIDACIÓN: CAMPOS VACÍOS
     if(!nombre || !fechaInicio || !horaInicio || !fechaFin || !horaFin) {
-        return alert("Por favor completa todos los campos de fecha y hora.");
+        return mostrarToast("Por favor completa todos los campos de fecha y hora.", "error");
     }
 
     // 2. VALIDACIÓN LÓGICA DE FECHAS
@@ -288,12 +288,12 @@ async function guardarEvento() {
 
     // A. ¿Fecha de inicio en el pasado?
     if (startDateTime < now) {
-        return alert("Error: No puedes crear un evento en el pasado.");
+        return mostrarToast("Error: No puedes crear un evento en el pasado.", "error");
     }
 
     // B. ¿Fecha fin antes que fecha inicio?
     if (endDateTime <= startDateTime) {
-        return alert("Error: La fecha/hora de fin debe ser posterior a la de inicio.");
+        return mostrarToast("Error: La fecha/hora de fin debe ser posterior a la de inicio.", "error");
     }
 
     try {
@@ -309,13 +309,13 @@ async function guardarEvento() {
         });
 
         if (res.ok) {
-            alert("¡Evento creado!");
+            mostrarToast("¡Evento creado!", "exito");
             cerrarModal('modal-crear-evento');
             limpiarFormularioCrear(); // Limpiar también al terminar
             cargarEventos();
         } else {
             const data = await res.json();
-            alert("Error al crear: " + (data.error || "Desconocido"));
+            mostrarToast("Error al crear: " + (data.error || "Desconocido"), "error");
         }
     } catch (e) { console.error(e); }
 }

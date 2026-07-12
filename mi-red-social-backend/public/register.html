@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro - Red Social Universitaria</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/register.css">
+</head>
+<body>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <div class="register-container">
+        <div class="header">
+            <h1>Únete a la Comunidad</h1>
+            <p>Crea tu cuenta para conectar con la universidad</p>
+        </div>
+
+        <div id="errorMessage" class="error-message"></div>
+
+        <form id="registerForm">
+            <!-- COMMON FIELDS -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="nombre_usuario">Nombre de Usuario</label>
+                    <input type="text" id="nombre_usuario" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="clave">Contraseña</label>
+                    <input type="password" id="clave" class="form-control" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="tipo_miembro">¿Qué tipo de cuenta deseas crear?</label>
+                <select id="tipo_miembro" class="form-control" required onchange="handleTipoMiembroChange()">
+                    <option value="" disabled selected>Selecciona una opción</option>
+                    <option value="P">Persona (Estudiante, Profesor, etc.)</option>
+                    <option value="D">Dependencia Universitaria</option>
+                    <option value="O">Organización Asociada</option>
+                </select>
+            </div>
+
+            <!-- SECTION: PERSONA -->
+            <div id="sectionPersona" class="form-section">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nombres">Nombres</label>
+                        <input type="text" id="nombres" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="apellidos">Apellidos</label>
+                        <input type="text" id="apellidos" class="form-control">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="tipo_documento_p">Tipo Doc.</label>
+                        <select id="tipo_documento_p" class="form-control">
+                            <option value="V">V</option>
+                            <option value="E">E</option>
+                            <option value="J">J</option>
+                            <option value="P">P</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex: 3;">
+                        <label for="numero_documento_p">Número de Documento</label>
+                        <input type="number" id="numero_documento_p" class="form-control">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="fecha_nacimiento">Fecha de Nacimiento</label>
+                        <input type="date" id="fecha_nacimiento" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="sexo">Sexo</label>
+                        <select id="sexo" class="form-control">
+                            <option value="M">Masculino</option>
+                            <option value="F">Femenino</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="ubicacion">Ubicación</label>
+                    <input type="text" id="ubicacion" class="form-control">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="correo_universitario">Correo Universitario</label>
+                        <input type="email" id="correo_universitario" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="correo_personal">Correo Personal</label>
+                        <input type="email" id="correo_personal" class="form-control">
+                    </div>
+                </div>
+
+                <!-- Subtipo de Persona -->
+                <div class="form-group">
+                    <label for="subtipo_persona">Rol Universitario</label>
+                    <select id="subtipo_persona" class="form-control" onchange="handleSubtipoPersonaChange()">
+                        <option value="ESTUDIANTE" selected>Estudiante</option>
+                        <option value="PROFESOR">Profesor</option>
+                        <option value="EGRESADO">Egresado</option>
+                        <option value="PERSONAL">Personal Administrativo/Obrero</option>
+                    </select>
+                </div>
+
+                <!-- Profesor Extra -->
+                <div id="extraProfesor" style="display: none;">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="ensena_desde">Enseña Desde</label>
+                            <input type="date" id="ensena_desde" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="categoria">Categoría</label>
+                            <select id="categoria" class="form-control">
+                                <option value="Ordinario">Ordinario</option>
+                                <option value="Contratado">Contratado</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="dedicacion">Dedicación</label>
+                            <select id="dedicacion" class="form-control">
+                                <option value="Tiempo completo">Tiempo completo</option>
+                                <option value="Medio tiempo">Medio tiempo</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Personal Extra -->
+                <div id="extraPersonal" style="display: none;">
+                    <div class="form-group">
+                        <label for="cargo">Cargo</label>
+                        <input type="text" id="cargo" class="form-control">
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: DEPENDENCIA -->
+            <div id="sectionDependencia" class="form-section">
+                <div class="form-group">
+                    <label for="nombre_dependencia">Nombre de la Dependencia</label>
+                    <input type="text" id="nombre_dependencia" class="form-control">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="telefono_d">Teléfono</label>
+                        <input type="text" id="telefono_d" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="correo_contacto_d">Correo de Contacto</label>
+                        <input type="email" id="correo_contacto_d" class="form-control">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="descripcion_d">Descripción</label>
+                    <textarea id="descripcion_d" class="form-control" rows="3"></textarea>
+                </div>
+            </div>
+
+            <!-- SECTION: ORGANIZACION -->
+            <div id="sectionOrganizacion" class="form-section">
+                <div class="form-group">
+                    <label for="nombre_organizacion">Nombre de la Organización</label>
+                    <input type="text" id="nombre_organizacion" class="form-control">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="tipo_documento_o">Tipo Documento (Ej. RIF)</label>
+                        <input type="text" id="tipo_documento_o" class="form-control" placeholder="J">
+                    </div>
+                    <div class="form-group">
+                        <label for="numero_documento_o">Número de Documento</label>
+                        <input type="number" id="numero_documento_o" class="form-control">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="correo_contacto_o">Correo de Contacto</label>
+                    <input type="email" id="correo_contacto_o" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="descripcion_o">Descripción</label>
+                    <textarea id="descripcion_o" class="form-control" rows="3"></textarea>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-primary" id="submitBtn">
+                <span class="btn-text">Registrarme</span>
+                <div class="spinner"></div>
+            </button>
+        </form>
+
+        <div class="footer">
+            ¿Ya tienes una cuenta? <a href="/login.html">Inicia sesión</a>
+        </div>
+    </div>
+
+    <script>
+        function handleTipoMiembroChange() {
+            const tipo = document.getElementById('tipo_miembro').value;
+            
+            document.getElementById('sectionPersona').classList.remove('active');
+            document.getElementById('sectionDependencia').classList.remove('active');
+            document.getElementById('sectionOrganizacion').classList.remove('active');
+
+            if (tipo === 'P') document.getElementById('sectionPersona').classList.add('active');
+            if (tipo === 'D') document.getElementById('sectionDependencia').classList.add('active');
+            if (tipo === 'O') document.getElementById('sectionOrganizacion').classList.add('active');
+        }
+
+        function handleSubtipoPersonaChange() {
+            const subtipo = document.getElementById('subtipo_persona').value;
+            
+            document.getElementById('extraProfesor').style.display = 'none';
+            document.getElementById('extraPersonal').style.display = 'none';
+
+            if (subtipo === 'PROFESOR') {
+                document.getElementById('extraProfesor').style.display = 'block';
+            } else if (subtipo === 'PERSONAL') {
+                document.getElementById('extraPersonal').style.display = 'block';
+            }
+        }
+
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const tipo_miembro = document.getElementById('tipo_miembro').value;
+            if (!tipo_miembro) {
+                showError('Debes seleccionar un tipo de cuenta.');
+                return;
+            }
+
+            const payload = {
+                nombre_usuario: document.getElementById('nombre_usuario').value.trim(),
+                clave: document.getElementById('clave').value,
+                tipo_miembro: tipo_miembro
+            };
+
+            // Collect specific fields based on type
+            if (tipo_miembro === 'P') {
+                payload.persona = {
+                    nombres: document.getElementById('nombres').value.trim(),
+                    apellidos: document.getElementById('apellidos').value.trim(),
+                    tipo_documento: document.getElementById('tipo_documento_p').value,
+                    numero_documento: document.getElementById('numero_documento_p').value,
+                    fecha_nacimiento: document.getElementById('fecha_nacimiento').value,
+                    sexo: document.getElementById('sexo').value,
+                    ubicacion: document.getElementById('ubicacion').value.trim(),
+                    correo_universitario: document.getElementById('correo_universitario').value.trim(),
+                    correo_personal: document.getElementById('correo_personal').value.trim(),
+                    subtipo: document.getElementById('subtipo_persona').value
+                };
+                
+                if (payload.persona.subtipo === 'PROFESOR') {
+                    payload.persona.ensena_desde = document.getElementById('ensena_desde').value;
+                    payload.persona.categoria = document.getElementById('categoria').value;
+                    payload.persona.dedicacion = document.getElementById('dedicacion').value;
+                } else if (payload.persona.subtipo === 'PERSONAL') {
+                    payload.persona.cargo = document.getElementById('cargo').value.trim();
+                }
+            } else if (tipo_miembro === 'D') {
+                payload.dependencia = {
+                    nombre_dependencia: document.getElementById('nombre_dependencia').value.trim(),
+                    telefono: document.getElementById('telefono_d').value.trim(),
+                    correo_contacto: document.getElementById('correo_contacto_d').value.trim(),
+                    descripcion: document.getElementById('descripcion_d').value.trim()
+                };
+            } else if (tipo_miembro === 'O') {
+                payload.organizacion = {
+                    nombre_organizacion: document.getElementById('nombre_organizacion').value.trim(),
+                    tipo_documento: document.getElementById('tipo_documento_o').value.trim(),
+                    numero_documento: document.getElementById('numero_documento_o').value,
+                    correo_contacto: document.getElementById('correo_contacto_o').value.trim(),
+                    descripcion: document.getElementById('descripcion_o').value.trim()
+                };
+            }
+
+            const submitBtn = document.getElementById('submitBtn');
+            const errorMsg = document.getElementById('errorMessage');
+            
+            submitBtn.classList.add('loading');
+            submitBtn.disabled = true;
+            errorMsg.classList.remove('show');
+
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    submitBtn.classList.remove('loading');
+                    submitBtn.style.backgroundColor = '#10b981';
+                    submitBtn.querySelector('.btn-text').textContent = '¡Cuenta creada!';
+                    submitBtn.querySelector('.btn-text').style.display = 'block';
+                    
+                    setTimeout(() => {
+                        window.location.href = '/login.html';
+                    }, 1000);
+                } else {
+                    showError(data.error || 'Ocurrió un error al registrarte.');
+                    submitBtn.classList.remove('loading');
+                    submitBtn.disabled = false;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Error de conexión. Inténtalo más tarde.');
+                submitBtn.classList.remove('loading');
+                submitBtn.disabled = false;
+            }
+        });
+
+        function showError(message) {
+            const errorMsg = document.getElementById('errorMessage');
+            errorMsg.textContent = message;
+            errorMsg.classList.add('show');
+            
+            // Shake effect
+            const container = document.querySelector('.register-container');
+            container.style.animation = 'none';
+            container.offsetHeight; /* trigger reflow */
+            container.style.animation = 'shake 0.4s ease-in-out';
+            
+            setTimeout(() => {
+                container.style.animation = '';
+            }, 400);
+        }
+
+        const style = document.createElement('style');
+        style.innerHTML = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                20%, 60% { transform: translateX(-5px); }
+                40%, 80% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

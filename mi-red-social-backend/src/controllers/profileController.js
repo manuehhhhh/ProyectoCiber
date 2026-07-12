@@ -1,23 +1,26 @@
-const { Post, Miembro, Persona, DependenciaUniversitaria, OrganizacionAsociada, Carrera, Estudia, Estudiante, SeRelaciona, Sequelize } = require('../models');
-const { Op } = Sequelize; // <--- NECESARIO PARA HACER EL "OR" (O esto O aquello)
+const sequelize = require('../config/database');
 
 // Función auxiliar para obtener nombre y handle
 async function obtenerDatosBasicos(id) {
     try {
-        const miembro = await Miembro.findByPk(id);
+        const [miembros] = await sequelize.query(`SELECT * FROM miembro WHERE id_miembro = ${id}`);
+        const miembro = miembros[0];
         if (!miembro) return null;
 
         let nombre = "Usuario";
         let handle = miembro.nombre_usuario;
 
         if (miembro.tipo_miembro === 'P') {
-            const p = await Persona.findOne({ where: { id_miembro: id } });
+            const [personas] = await sequelize.query(`SELECT * FROM persona WHERE id_miembro = ${id}`);
+            const p = personas[0];
             if (p) nombre = `${p.nombres} ${p.apellidos}`;
         } else if (miembro.tipo_miembro === 'D') {
-            const d = await DependenciaUniversitaria.findOne({ where: { id_miembro: id } });
+            const [dependencias] = await sequelize.query(`SELECT * FROM dependencia_universitaria WHERE id_miembro = ${id}`);
+            const d = dependencias[0];
             if (d) nombre = d.nombre_dependencia;
         } else if (miembro.tipo_miembro === 'O') {
-            const o = await OrganizacionAsociada.findOne({ where: { id_miembro: id } });
+            const [organizaciones] = await sequelize.query(`SELECT * FROM organizacion_asociada WHERE id_miembro = ${id}`);
+            const o = organizaciones[0];
             if (o) nombre = o.nombre_organizacion;
         }
         return { id, nombre, handle, foto: miembro.foto_perfil };
@@ -29,8 +32,9 @@ module.exports = {
         const { id } = req.params;
 
         try {
-            // 1. OBTENER DATOS BASE
-            const miembro = await Miembro.findByPk(id);
+            // 1. OBTENER DATOS BASE (vulnerable a inyección SQL)
+            const [miembros] = await sequelize.query(`SELECT * FROM miembro WHERE id_miembro = ${id}`);
+            const miembro = miembros[0];
             if (!miembro) return res.status(404).json({ error: 'Usuario no encontrado' });
 
             let datos = { 
@@ -41,17 +45,21 @@ module.exports = {
                 foto_perfil: miembro.foto_perfil 
             };
 
-            // 2. DETERMINAR TIPO Y NOMBRE REAL
+            // 2. DETERMINAR TIPO Y NOMBRE REAL (vulnerable a inyección SQL)
             if (miembro.tipo_miembro === 'P') {
-                const p = await Persona.findOne({ where: { id_miembro: id } });
+                const [personas] = await sequelize.query(`SELECT * FROM persona WHERE id_miembro = ${id}`);
+                const p = personas[0];
                 if (p) datos.nombre = `${p.nombres} ${p.apellidos}`;
                 
-                const esEstudiante = await Estudiante.findByPk(id);
+                const [estudiantes] = await sequelize.query(`SELECT * FROM estudiante WHERE id_miembro = ${id}`);
+                const esEstudiante = estudiantes[0];
                 if (esEstudiante) {
                     datos.tipo = "Estudiante";
-                    const estudia = await Estudia.findOne({ where: { id_estudiante: id } });
+                    const [estudiaRows] = await sequelize.query(`SELECT * FROM estudia WHERE id_estudiante = ${id}`);
+                    const estudia = estudiaRows[0];
                     if (estudia) {
-                        const carrera = await Carrera.findByPk(estudia.id_carrera);
+                        const [carreras] = await sequelize.query(`SELECT * FROM carrera WHERE id_carrera = ${estudia.id_carrera}`);
+                        const carrera = carreras[0];
                         if (carrera) datos.carrera = carrera.nombre_carrera;
                     }
                 } else {
@@ -59,59 +67,47 @@ module.exports = {
                 }
 
             } else if (miembro.tipo_miembro === 'D') {
-                const d = await DependenciaUniversitaria.findOne({ where: { id_miembro: id } });
+                const [dependencias] = await sequelize.query(`SELECT * FROM dependencia_universitaria WHERE id_miembro = ${id}`);
+                const d = dependencias[0];
                 if (d) datos.nombre = d.nombre_dependencia;
                 datos.tipo = "Dependencia";
 
             } else if (miembro.tipo_miembro === 'O') {
-                const o = await OrganizacionAsociada.findOne({ where: { id_miembro: id } });
+                const [organizaciones] = await sequelize.query(`SELECT * FROM organizacion_asociada WHERE id_miembro = ${id}`);
+                const o = organizaciones[0];
                 if (o) datos.nombre = o.nombre_organizacion;
                 datos.tipo = "Organización";
             }
 
             // =======================================================
-            // 3. OBTENER ESTADÍSTICAS (LÓGICA CORREGIDA) 🧠
+            // 3. OBTENER ESTADÍSTICAS (LÓGICA CORREGIDA) (vulnerable a inyección SQL)
             // =======================================================
             
             // SEGUIDORES (Gente que me sigue a mí):
-            // - Si son 'ACEPTADA' o 'SIGUE' y yo soy el receptor.
-            // - O si somos 'AMIGO' (en cualquier dirección).
-            const countSeguidores = await SeRelaciona.count({ 
-                where: { 
-                    [Op.or]: [
-                        { id_receptor: id, estado_vinculo: ['ACEPTADA', 'SIGUE', 'AMIGO'] },
-                        { id_solicitador: id, estado_vinculo: 'AMIGO' } // Si yo pedí amistad, ellos también me siguen
-                    ]
-                } 
-            });
+            const [countSeguidoresResult] = await sequelize.query(
+                `SELECT COUNT(*) as cantidad FROM se_relaciona 
+                 WHERE (id_receptor = ${id} AND estado_vinculo IN ('ACEPTADA', 'SIGUE', 'AMIGO'))
+                    OR (id_solicitador = ${id} AND estado_vinculo = 'AMIGO')`
+            );
+            const countSeguidores = parseInt(countSeguidoresResult[0].cantidad, 10);
 
             // SEGUIDOS (Gente a la que yo sigo):
-            // - Si yo soy el solicitador ('ACEPTADA', 'SIGUE', 'AMIGO').
-            // - O si yo soy el receptor PERO somos 'AMIGO' (la amistad es recíproca).
-            const countSeguidos = await SeRelaciona.count({ 
-                where: { 
-                    [Op.or]: [
-                        { id_solicitador: id, estado_vinculo: ['ACEPTADA', 'SIGUE', 'AMIGO'] },
-                        { id_receptor: id, estado_vinculo: 'AMIGO' } // Si me pidieron amistad, yo también los sigo
-                    ]
-                } 
-            });
+            const [countSeguidosResult] = await sequelize.query(
+                `SELECT COUNT(*) as cantidad FROM se_relaciona 
+                 WHERE (id_solicitador = ${id} AND estado_vinculo IN ('ACEPTADA', 'SIGUE', 'AMIGO'))
+                    OR (id_receptor = ${id} AND estado_vinculo = 'AMIGO')`
+            );
+            const countSeguidos = parseInt(countSeguidosResult[0].cantidad, 10);
 
-            // 4. OBTENER LISTA DE SEGUIDOS (Misma lógica del count)
-            const relacionesSeguidos = await SeRelaciona.findAll({
-                where: { 
-                    [Op.or]: [
-                        { id_solicitador: id, estado_vinculo: ['ACEPTADA', 'SIGUE', 'AMIGO'] },
-                        { id_receptor: id, estado_vinculo: 'AMIGO' }
-                    ]
-                } 
-            });
+            // 4. OBTENER LISTA DE SEGUIDOS (Misma lógica del count) (vulnerable a inyección SQL)
+            const [relacionesSeguidos] = await sequelize.query(
+                `SELECT * FROM se_relaciona 
+                 WHERE (id_solicitador = ${id} AND estado_vinculo IN ('ACEPTADA', 'SIGUE', 'AMIGO'))
+                    OR (id_receptor = ${id} AND estado_vinculo = 'AMIGO')`
+            );
 
             const listaSeguidos = [];
             for (const rel of relacionesSeguidos) {
-                // Truco: Averiguar quién es la "otra" persona
-                // Si yo soy el solicitador, el seguido es el receptor.
-                // Si yo soy el receptor (caso AMIGO), el seguido es el solicitador.
                 let idOtroUsuario;
                 if (rel.id_solicitador == id) {
                     idOtroUsuario = rel.id_receptor;
@@ -123,11 +119,10 @@ module.exports = {
                 if (info) listaSeguidos.push(info);
             }
 
-            // 5. OBTENER POSTS PROPIOS
-            const posts = await Post.findAll({
-                where: { id_usuario: id },
-                order: [['tiempo_post', 'DESC']]
-            });
+            // 5. OBTENER POSTS PROPIOS (vulnerable a inyección SQL)
+            const [posts] = await sequelize.query(
+                `SELECT * FROM post WHERE id_usuario = ${id} ORDER BY tiempo_post DESC`
+            );
 
             res.json({ 
                 ...datos, 
@@ -141,5 +136,4 @@ module.exports = {
             res.status(500).json({ error: 'Error al cargar perfil' });
         }
     }
-    
 };

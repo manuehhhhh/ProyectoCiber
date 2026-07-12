@@ -43,9 +43,9 @@
                 <div class="flex items-center gap-4">
                     <div class="text-right hidden sm:block">
                         <p class="text-xs text-gray-400">Sesión iniciada como</p>
-                        <p class="text-sm font-bold text-gray-700">Miguel Á. Pérez</p>
+                        <p id="user-header-name" class="text-sm font-bold text-gray-700">Cargando...</p>
                     </div>
-                    <div class="w-10 h-10 rounded-full bg-[#4fc1e9] border-2 border-white shadow-sm flex items-center justify-center text-white font-bold italic">M</div>
+                    <div id="user-header-avatar" class="w-10 h-10 rounded-full bg-[#4fc1e9] border-2 border-white shadow-sm flex items-center justify-center text-white font-bold italic">?</div>
                 </div>
             </header>
 
@@ -159,9 +159,34 @@
     </div>
 
     <script>
-        const API_URL = "http://localhost:8000/api/grupo/";
-        const API_URL_MIEMBROS = "http://localhost:8000/api/miembro/";
-        const API_URL_PERTENECE = "http://localhost:8000/api/pertenece/";
+        // --- AUTH CHECK ---
+        const usuarioActual = JSON.parse(localStorage.getItem('usuario'));
+        if (!usuarioActual) {
+            window.location.href = '/login.html';
+        }
+
+        // --- UPDATE HEADER INFO ---
+        document.addEventListener('DOMContentLoaded', () => {
+            if (usuarioActual) {
+                const nombreHeader = document.getElementById('user-header-name');
+                const avatarHeader = document.getElementById('user-header-avatar');
+                if(nombreHeader) nombreHeader.textContent = usuarioActual.nombre_usuario || 'Usuario';
+                if(avatarHeader) avatarHeader.textContent = (usuarioActual.nombre_usuario || 'U').charAt(0).toUpperCase();
+            }
+        });
+
+        const API_URL = "/api/grupo/";
+        const API_URL_MIEMBROS = "/api/miembro/";
+        const API_URL_PERTENECE = "/api/pertenece/";
+
+        // Toast custom UX
+        function showToast(msg, type='info') {
+            const toast = document.createElement('div');
+            toast.className = `fixed bottom-4 right-4 text-white px-6 py-3 rounded shadow-lg transition-opacity duration-300 ${type === 'error' ? 'bg-red-500' : 'bg-green-500'}`;
+            toast.innerText = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+        }
 
         async function cargarGrupos() {
             const tbody = document.getElementById('tabla-grupos');
@@ -263,7 +288,7 @@
                 });
                 
                 if (response.ok) {
-                    alert("Grupo creado exitosamente");
+                    showToast("Grupo creado exitosamente", 'success');
                     cerrarModal();
                     cargarGrupos(); // Recargar la tabla
                 } else {
@@ -271,7 +296,7 @@
                 }
             } catch (error) {
                 console.error("Error:", error);
-                alert("Error al crear el grupo: " + error.message);
+                showToast("Error al crear el grupo: " + error.message, 'error');
             }
         });
 
@@ -343,7 +368,7 @@
                 });
                 
                 if (responseUpdate.ok) {
-                    alert("Miembro añadido exitosamente");
+                    showToast("Miembro añadido exitosamente", 'success');
                     cerrarModalMiembro();
                     cargarGrupos(); // Recargar la tabla
                 } else {
@@ -351,7 +376,7 @@
                 }
             } catch (error) {
                 console.error("Error:", error);
-                alert("Error al añadir el miembro: " + error.message);
+                showToast("Error al añadir el miembro: " + error.message, 'error');
             }
         });
 
@@ -371,7 +396,7 @@
                 });
                 
                 if (response.ok) {
-                    alert("Grupo eliminado exitosamente");
+                    showToast("Grupo eliminado exitosamente", 'success');
                     cerrarModalEliminar();
                     cargarGrupos(); // Recargar la tabla
                 } else {
@@ -379,7 +404,7 @@
                 }
             } catch (error) {
                 console.error("Error:", error);
-                alert("Error al eliminar el grupo: " + error.message);
+                showToast("Error al eliminar el grupo: " + error.message, 'error');
             }
         }
 

@@ -4,7 +4,15 @@
  * Versión: Incluye Perfil, Amistad, Comentarios y SUBIDA DE IMÁGENES.
  */
 
-const ID_USUARIO_LOGUEADO = 45; 
+// Recuperar sesión de localStorage
+const usuarioActual = JSON.parse(localStorage.getItem('usuario'));
+
+// Si no hay sesión, redirigir al login (excepto si ya estamos ahí)
+if (!usuarioActual && !window.location.pathname.includes('login') && !window.location.pathname.includes('register')) {
+    window.location.href = '/login.html';
+}
+
+const ID_USUARIO_LOGUEADO = usuarioActual ? usuarioActual.id_miembro : null; 
 let ID_POST_ACTUAL_EN_MODAL = null;
 let archivoPostSeleccionado = null; // Variable global para la imagen del post
 
@@ -18,9 +26,21 @@ document.addEventListener('DOMContentLoaded', () => {
     configurarNavegacion();       // Control de botones Inicio/Perfil
     inicializarContador();        // Contador de caracteres del post
     configurarModalComentarios(); // Eventos del modal
-    configurarInputImagenPost();  //  Eventos para la camarita
-    configurarBuscador();              //Eventos para el buscador global
+    configurarInputImagenPost();  // Eventos para la camarita
+    configurarBuscador();         // Eventos para el buscador global
+    configurarLogout();           // Cierre de sesión
 });
+
+function configurarLogout() {
+    const btnSalir = document.querySelector('a[href="#"][style*="color: red;"]');
+    if (btnSalir) {
+        btnSalir.addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('usuario');
+            window.location.href = '/login.html';
+        });
+    }
+}
 
 // ==========================================
 // 2. NAVEGACIÓN (SPA) 🧭
@@ -268,7 +288,7 @@ formData.append('foto', archivo);
                 // Timestamp para evitar caché
                 imgVisual.src = `${data.ruta}?t=${new Date().getTime()}`;
                 cargarPerfilUsuarioLateral(); 
-            } else { alert("Error al subir la foto"); }
+            } else { mostrarToast("Error al subir la foto", "error"); }
         } catch (error) { console.error(error); } 
         finally {
             imgVisual.style.opacity = '1';
@@ -293,7 +313,7 @@ function configurarBotonPublicar() {
         nuevoBtn.addEventListener('click', async () => {
             const contenido = txtInput.value.trim();
             if (!contenido && !archivoPostSeleccionado) {
-                alert("Escribe algo o sube una imagen");
+                mostrarToast("Escribe algo o sube una imagen", "error");
                 return;
             }
             
@@ -322,8 +342,8 @@ function configurarBotonPublicar() {
                     if(previewDiv) previewDiv.style.display = 'none';
                     if(contador) contador.textContent = '200'; 
                     await cargarPublicacionesInicio(); 
-                } else { alert('Error al publicar'); }
-            } catch (error) { alert('Error de conexión'); } 
+                } else { mostrarToast('Error al publicar', 'error'); }
+            } catch (error) { mostrarToast('Error de conexión', 'error'); } 
             finally { 
                 nuevoBtn.textContent = 'Publicar'; 
                 nuevoBtn.disabled = false; 
@@ -447,6 +467,26 @@ async function cargarPublicacionesInicio() {
 // 5. HELPERS Y UTILS 🛠️
 // ==========================================
 
+function mostrarToast(mensaje, tipo = 'info') {
+    const toast = document.createElement('div');
+    toast.style.position = 'fixed';
+    toast.style.bottom = '20px';
+    toast.style.right = '20px';
+    toast.style.padding = '15px 25px';
+    toast.style.borderRadius = '8px';
+    toast.style.color = '#fff';
+    toast.style.fontWeight = 'bold';
+    toast.style.zIndex = '9999';
+    toast.style.transition = 'opacity 0.3s ease';
+    toast.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+    if (tipo === 'error') toast.style.background = '#ef4444';
+    else if (tipo === 'exito') toast.style.background = '#10b981';
+    else toast.style.background = '#3b82f6';
+    toast.innerText = mensaje;
+    document.body.appendChild(toast);
+    setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+}
+
 function formatearTiempo(fechaISO) {
     const ahora = new Date();
     const fecha = new Date(fechaISO);
@@ -555,9 +595,9 @@ async function toggleSeguir(idDestino) {
             btn.className = "btn_accion_perfil btn_amigo";
             btn.innerHTML = '<i class="fa-solid fa-user-group"></i> <span>Amigos</span>';
             spanSeguidores.textContent = cantActual + 1;
-            alert("¡Ahora están conectados como amigos!");
+            mostrarToast("¡Ahora están conectados como amigos!", "exito");
         }
-    } catch (error) { console.error(error); alert("Error de conexión"); } 
+    } catch (error) { console.error(error); mostrarToast("Error de conexión", "error"); } 
     finally { btn.disabled = false; }
 }
 
@@ -642,7 +682,7 @@ async function enviarComentario() {
             abrirModalComentarios(ID_POST_ACTUAL_EN_MODAL); 
             cargarPublicacionesInicio(); 
         }
-    } catch(e) { alert('Error al enviar comentario'); }
+    } catch(e) { mostrarToast('Error al enviar comentario', 'error'); }
 }
 
 function configurarModalComentarios() {
@@ -769,10 +809,10 @@ async function eliminarPost(idPost) {
                 setTimeout(() => tarjeta.remove(), 500); // Lo borramos
             }
         } else {
-            alert("No se pudo eliminar.");
+            mostrarToast("No se pudo eliminar.", "error");
         }
     } catch (error) {
         console.error(error);
-        alert("Error de conexión");
+        mostrarToast("Error de conexión", "error");
     }
 }
