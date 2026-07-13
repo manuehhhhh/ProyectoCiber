@@ -9,9 +9,9 @@ exports.crearMensaje = async (req, res) => {
   try {
     const timestamp = new Date();
     const [result] = await sequelize.query(
-      `INSERT INTO mensaje (id_grupo, id_usuario, contenido_textual, tiempo_mensaje) VALUES ($1, $2, $3, $4) RETURNING *`,
-      { bind: [id_grupo, id_usuario, contenido_textual, timestamp] }
-    );
+  `INSERT INTO mensaje (id_grupo, id_usuario, contenido_textual, tiempo_mensaje) VALUES ($1, $2, $3, NOW()) RETURNING *`,
+  { bind: [id_grupo, id_usuario, contenido_textual] }
+);
     const nuevoMensaje = result[0];
     return res.status(201).json({ mensaje: 'Mensaje creado', data: nuevoMensaje });
   } catch (error) {
