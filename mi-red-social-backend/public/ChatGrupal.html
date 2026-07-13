@@ -122,11 +122,13 @@
             }
         }
 
+        let activeGroupId = null;
+
         function seleccionarChat(id, tipo, miembros) {
+            activeGroupId = id;
             document.getElementById('nombre-grupo-activo').innerText = "Comunidad Académica #" + id;
             document.getElementById('info-grupo-activo').innerText = `Tipo: ${tipo} | Miembros activos: ${miembros}`;
             
-            // Simulación de mensajes
             const msgContenedor = document.getElementById('contenedor-mensajes');
             msgContenedor.innerHTML = `
                 <div class="flex justify-center mb-4">
@@ -135,19 +137,47 @@
                 <div class="flex items-end gap-2 max-w-[80%]">
                     <div class="w-8 h-8 rounded-full bg-gray-300 flex-shrink-0 flex items-center justify-center text-xs">U1</div>
                     <div class="bg-white p-3 rounded-2xl rounded-bl-none shadow-sm text-sm text-gray-700">
-                        ¡Hola! Bienvenidos al grupo de tipo <b>${tipo}</b>. ¿Alguien tiene el material de la clase?
-                    </div>
-                </div>
-                <div class="flex items-end gap-2 max-w-[80%] ml-auto flex-row-reverse">
-                    <div class="w-8 h-8 rounded-full bg-blue-500 flex-shrink-0 flex items-center justify-center text-xs text-white italic font-bold">Yo</div>
-                    <div class="bg-[#6ca6e0] p-3 rounded-2xl rounded-br-none shadow-sm text-sm text-white">
-                        Hola, estoy revisando el repositorio de Recursos para subirlo.
+                        ¡Hola! Bienvenidos al grupo de tipo <b>${tipo}</b>.
                     </div>
                 </div>
             `;
         }
 
         document.addEventListener('DOMContentLoaded', cargarChats);
+
+        document.getElementById('btn-enviar').addEventListener('click', async () => {
+            const input = document.getElementById('input-mensaje');
+            const texto = input.value.trim();
+            if (!texto || !activeGroupId) return;
+            const payload = {
+                id_grupo: activeGroupId,
+                id_usuario: 1,
+                contenido_textual: texto
+            };
+            try {
+                const res = await fetch('/api/mensaje', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) throw new Error('Error al enviar mensaje');
+                const data = await res.json();
+                const cont = document.getElementById('contenedor-mensajes');
+                cont.innerHTML += `
+                    <div class="flex items-end gap-2 max-w-[80%] ml-auto flex-row-reverse">
+                        <div class="w-8 h-8 rounded-full bg-blue-500 flex-shrink-0 flex items-center justify-center text-xs text-white italic font-bold">Yo</div>
+                        <div class="bg-[#6ca6e0] p-3 rounded-2xl rounded-br-none shadow-sm text-sm text-white">
+                            ${texto}
+                        </div>
+                    </div>
+                `;
+                input.value = '';
+                cont.scrollTop = cont.scrollHeight;
+            } catch (e) {
+                console.error(e);
+                alert('No se pudo enviar el mensaje');
+            }
+        });
     </script>
 </body>
 </html>

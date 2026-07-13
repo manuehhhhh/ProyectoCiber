@@ -28,6 +28,7 @@ const relationshipController = require('../controllers/relationshipController');
 const eventController = require('../controllers/eventController');
 const searchController = require('../controllers/searchController');
 const createCRUDController = require('../controllers/genericController');
+const mensajeController = require('../controllers/mensajeController');
 
 // =====================================================================
 // SECCIÓN A: RUTAS ESPECÍFICAS (Lógica de Negocio)
@@ -103,6 +104,7 @@ router.post('/eventos/suscribirse', eventController.toggleAsistencia);
 // ---------------------------------------------------------------------
 // Buscador global (Personas, Organizaciones, etc.)
 router.get('/search', searchController.buscar);
+router.post('/mensaje', mensajeController.crearMensaje);
 
 
 // =====================================================================
