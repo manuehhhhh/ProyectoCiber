@@ -21,47 +21,68 @@
         </div>
     </nav>
 
+    <div class="flex min-h-screen">
+  <aside class="barra_lateral_izquierda">
+    <div class="logo_app">
+      <img src="img/logo_soyucab.png" alt="SoyUCAB" class="imagen_logo_sidebar">
+    </div>
+    <nav class="menu_navegacion">
+      <a href="index.html" class="item_menu activo">
+        <i class="fa-solid fa-house"></i> Inicio
+      </a>
+      <div class="separador_menu"></div>
+      <a href="Grupos.html" class="item_menu">
+        <i class="fa-solid fa-users"></i> Grupos Suscritos
+      </a>
+      <a href="eventos.html?filtro=suscritos" class="item_menu">
+        <i class="fa-solid fa-bullhorn"></i> Eventos Suscritos
+      </a>
+      
+        
+      
+    </nav>
+    <div class="p-6 border-t border-blue-300 text-sm">
+      <p class="opacity-75 text-center">Base de Datos v2.0</p>
+    </div>
+  </aside>
+  <main class="columna_central">
     <div class="max-w-4xl mx-auto p-6 -mt-4">
-        <div class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
-            <div class="h-32 bg-gradient-to-r from-[#6ca6e0] to-[#4fc1e9]"></div>
-            
-            <div class="px-8 pb-8">
-                <div class="relative flex justify-between items-end -mt-12">
-                    <div class="p-2 bg-white rounded-2xl shadow-lg">
-                        <div class="w-24 h-24 bg-blue-500 rounded-xl flex items-center justify-center text-white text-4xl shadow-inner">
-                            <i class="fas fa-users"></i>
-                        </div>
-                    </div>
-                    <div class="flex gap-2 mb-2">
-                        <button class="bg-[#4fc1e9] text-white px-6 py-2 rounded-full font-bold shadow-md hover:bg-blue-600 transition-all">
-                            Unirme al Grupo
-                        </button>
-                        <button class="bg-gray-100 text-gray-500 p-2 rounded-full hover:bg-gray-200">
-                            <i class="fas fa-share-alt"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="mt-6">
-                    <div class="flex items-center gap-3">
-                        <h2 id="nombre-grupo" class="text-3xl font-black text-gray-800">Comunidad #<span id="id-display">--</span></h2>
-                        <span id="badge-tipo" class="px-3 py-1 rounded-full text-xs font-black border uppercase tracking-widest">---</span>
-                    </div>
-                    <p class="text-gray-400 mt-1 flex items-center gap-2">
-                        <i class="fas fa-calendar-alt"></i> Creado recientemente • <span id="miembros-display">0</span> miembros activos
-                    </p>
-                    
-                    <div class="mt-8 border-t border-gray-100 pt-6">
-                        <h3 class="text-sm font-bold text-[#6ca6e0] uppercase mb-2">Sobre este grupo</h3>
-                        <p id="descripcion-display" class="text-gray-600 leading-relaxed text-lg italic">
-                            Cargando descripción detallada...
-                        </p>
-                    </div>
-                </div>
+      <div class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+        <div class="h-32 bg-gradient-to-r from-[#6ca6e0] to-[#4fc1e9]"></div>
+        <div class="px-8 pb-8">
+          <div class="relative flex justify-between items-end -mt-12">
+            <div class="p-2 bg-white rounded-2xl shadow-lg">
+              <div class="w-24 h-24 bg-blue-500 rounded-xl flex items-center justify-center text-white text-4xl shadow-inner">
+                <i class="fas fa-users"></i>
+              </div>
             </div>
+            <div class="flex gap-2 mb-2">
+              <button class="bg-[#4fc1e9] text-white px-6 py-2 rounded-full font-bold shadow-md hover:bg-blue-600 transition-all">
+                Unirme al Grupo
+              </button>
+              <button class="bg-gray-100 text-gray-500 p-2 rounded-full hover:bg-gray-200">
+                <i class="fas fa-share-alt"></i>
+              </button>
+            </div>
+          </div>
+          <div class="mt-6">
+            <div class="flex items-center gap-3">
+              <h2 id="nombre-grupo" class="text-3xl font-black text-gray-800">Comunidad #<span id="id-display">--</span></h2>
+              <span id="badge-tipo" class="px-3 py-1 rounded-full text-xs font-black border uppercase tracking-widest">---</span>
+            </div>
+            <p class="text-gray-400 mt-1 flex items-center gap-2">
+              <i class="fas fa-calendar-alt"></i> Creado recientemente • <span id="miembros-display">0</span> miembros activos
+            </p>
+            <div class="mt-8 border-t border-gray-100 pt-6">
+              <h3 class="text-sm font-bold text-[#6ca6e0] uppercase mb-2">Sobre este grupo</h3>
+              <p id="descripcion-display" class="text-gray-600 leading-relaxed text-lg italic">Cargando descripción detallada...</p>
+            </div>
+          </div>
         </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+      </div>
+    </div>
+  </main>
+</div>     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-center">
                 <div class="text-blue-400 mb-2 text-2xl"><i class="fas fa-user-shield"></i></div>
                 <div class="text-2xl font-black text-gray-800" id="tipo-val">---</div>
@@ -88,7 +109,7 @@
         async function cargarInfoGrupo() {
             try {
                 // Consultamos a tu API de Sequelize
-                const response = await fetch(`http://localhost:8000/api/grupo/${grupoId}`);
+                const response = await fetch(`api/grupo/${grupoId}`);
                 const g = await response.json();
 
                 // Llenar datos en el HTML

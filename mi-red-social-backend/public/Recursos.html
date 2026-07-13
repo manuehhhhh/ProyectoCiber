@@ -13,28 +13,29 @@
 <body class="bg-gray-100 font-sans antialiased">
 
     <div class="flex min-h-screen">
-        <aside class="w-64 bg-[#6ca6e0] text-white hidden md:flex flex-col shadow-xl">
-            <div class="p-6 text-center border-b border-blue-300">
-                <h2 class="text-2xl font-bold tracking-wider">RED ACADÉMICA</h2>
-            </div>
-            <nav class="flex-grow mt-6">
-                <a href="#" class="flex items-center px-6 py-3 text-gray-100 hover:bg-white/10 transition-all">
-                    <i class="fas fa-home w-6"></i> <span>Inicio</span>
-                </a>
-                <a href="#" class="flex items-center px-6 py-3 sidebar-active text-white">
-                    <i class="fas fa-folder-open w-6"></i> <span>Recursos</span>
-                </a>
-                <a href="#" class="flex items-center px-6 py-3 text-gray-100 hover:bg-white/10 transition-all">
-                    <i class="fas fa-graduation-cap w-6"></i> <span>Carreras</span>
-                </a>
-                <a href="#" class="flex items-center px-6 py-3 text-gray-100 hover:bg-white/10 transition-all">
-                    <i class="fas fa-users w-6"></i> <span>Miembros</span>
-                </a>
-            </nav>
-            <div class="p-6 border-t border-blue-300 text-sm">
-                <p class="opacity-75 text-center">Base de Datos v2.0</p>
-            </div>
-        </aside>
+        <aside class="barra_lateral_izquierda">
+    <div class="logo_app">
+        <img src="img/logo_soyucab.png" alt="SoyUCAB" class="imagen_logo_sidebar">
+    </div>
+    <nav class="menu_navegacion">
+        <a href="index.html" class="item_menu activo">
+            <i class="fa-solid fa-house"></i> Inicio
+        </a>
+        <div class="separador_menu"></div>
+        <a href="Grupos.html" class="item_menu">
+            <i class="fa-solid fa-users"></i> Grupos Suscritos
+        </a>
+        <a href="eventos.html?filtro=suscritos" class="item_menu">
+            <i class="fa-solid fa-bullhorn"></i> Eventos Suscritos
+        </a>
+        <a href="Recursos.html" class="item_menu">
+            <i class="fa-solid fa-folder-open"></i> Recursos
+        </a>
+    </nav>
+    <div class="p-6 border-t border-blue-300 text-sm">
+        <p class="opacity-75 text-center">Base de Datos v2.0</p>
+    </div>
+</aside>
 
         <main class="flex-grow flex flex-col">
             
@@ -100,7 +101,7 @@
     </div>
 
     <script>
-        const API_URL = "http://localhost:8000/api/recurso/";
+        const API_URL = "/api/recurso/";
 
         async function cargarDatos() {
             const tbody = document.getElementById('tabla-recursos');

@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
     const mode = urlParams.get('mode'); // 'create' o 'edit'
     const postId = urlParams.get('id'); // ID del post si estamos editando
-    const postType = urlParams.get('type'); // Tipo de post si estamos editando ('social' o 'networking')
+
 
     if (mode === 'edit' && postId) {
         postFormTitle.textContent = 'Editar Post';
@@ -19,12 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Deshabilitar el switch al editar un post
         postTypeToggle.disabled = true;
 
-        // Si se especifica el tipo, marcar el switch apropiadamente
-        if (postType === 'networking') {
-            postTypeToggle.checked = true;
-        } else {
-            postTypeToggle.checked = false; // Por defecto social
-        }
+
 
         // Aquí iría la lógica para cargar el contenido y la imagen del post desde la API
         // Ejemplo de datos de un post a editar (simulado):
@@ -42,12 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
             imageUploadArea.querySelector('p').style.display = 'none';
         }
 
-        // Ajustar el toggle si el tipo del post existente es networking
-        if (existingPost.type === 'networking') {
-            postTypeToggle.checked = true;
-        } else {
-            postTypeToggle.checked = false;
-        }
+
 
     } else {
         // Modo 'create'
@@ -84,10 +74,10 @@ document.addEventListener('DOMContentLoaded', () => {
     publishPostBtn.addEventListener('click', () => {
         const content = postContent.value;
         const imageFile = postImageInput.files[0];
-        const isNetworking = postTypeToggle.checked;
+
 
         console.log("Contenido:", content);
-        console.log("Es Networking:", isNetworking);
+
         if (imageFile) {
             console.log("Imagen:", imageFile.name);
         }
