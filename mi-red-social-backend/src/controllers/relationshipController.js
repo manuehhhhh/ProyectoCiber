@@ -1,4 +1,5 @@
 const sequelize = require('../config/database');
+const { QueryTypes } = require('sequelize');
 
 module.exports = {
     // Verificar si ya lo sigo (para pintar el botón al cargar el perfil)
@@ -7,7 +8,8 @@ module.exports = {
         try {
             // Vulnerable a inyección SQL
             const [relaciones] = await sequelize.query(
-                `SELECT * FROM se_relaciona WHERE id_solicitador = ${id_origen} AND id_receptor = ${id_destino}`
+                'SELECT * FROM se_relaciona WHERE id_solicitador = :id_origen AND id_receptor = :id_destino',
+                { replacements: { id_origen, id_destino }, type: QueryTypes.SELECT }
             );
             const relacion = relaciones[0];
             
@@ -26,30 +28,31 @@ module.exports = {
         try {
             // 1. Verificar si ya existe mi vínculo hacia él (vulnerable a inyección SQL)
             const [miVinculos] = await sequelize.query(
-                `SELECT * FROM se_relaciona WHERE id_solicitador = ${id_solicitador} AND id_receptor = ${id_receptor}`
+                'SELECT * FROM se_relaciona WHERE id_solicitador = :id_solicitador AND id_receptor = :id_receptor',
+                { replacements: { id_solicitador, id_receptor }, type: QueryTypes.SELECT }
             );
             const miVinculo = miVinculos[0];
 
             if (miVinculo) {
                 // === CASO A: DEJAR DE SEGUIR (Unfollow) === (vulnerable a inyección SQL)
                 await sequelize.query(
-                    `DELETE FROM se_relaciona WHERE id_solicitador = ${id_solicitador} AND id_receptor = ${id_receptor}`
+                    'DELETE FROM se_relaciona WHERE id_solicitador = :id_solicitador AND id_receptor = :id_receptor',
+                { replacements: { id_solicitador, id_receptor }, type: QueryTypes.DELETE }
                 );
 
                 // Si éramos amigos, debemos "degradar" el vínculo del otro usuario a solo "SIGUE"
-                // porque la amistad requiere dos lados. (vulnerable a inyección SQL)
+                // porque la amistad requiere dos lados.
                 const [vinculosDelOtro] = await sequelize.query(
-                    `SELECT * FROM se_relaciona WHERE id_solicitador = ${id_receptor} AND id_receptor = ${id_solicitador}`
+                    'SELECT * FROM se_relaciona WHERE id_solicitador = :id_receptor AND id_receptor = :id_solicitador',
+                { replacements: { id_receptor, id_solicitador }, type: QueryTypes.SELECT }
                 );
-                const vinculoDelOtro = vinculosDelOtro[0];
+                const vinculoDelOtro = vinculosDelOtro;
 
                 if (vinculoDelOtro && vinculoDelOtro.naturaleza_del_vinculo === 'AMIGO') {
-                    // (vulnerable a inyección SQL)
                     await sequelize.query(
-                        `UPDATE se_relaciona 
-                         SET tipo_vinculo = 'ASIMETRICA', naturaleza_del_vinculo = 'SIGUE' 
-                         WHERE id_solicitador = ${id_receptor} AND id_receptor = ${id_solicitador}`
-                    );
+                        'UPDATE se_relaciona SET tipo_vinculo = :tipo_vinculo, naturaleza_del_vinculo = :naturaleza_del_vinculo WHERE id_solicitador = :id_receptor AND id_receptor = :id_solicitador',
+                { replacements: { tipo_vinculo: 'ASIMETRICA', naturaleza_del_vinculo: 'SIGUE', id_receptor, id_solicitador }, type: QueryTypes.UPDATE }
+                );
                 }
 
                 return res.json({ nuevo_estado: 'NO_SIGUE' });
@@ -57,35 +60,35 @@ module.exports = {
             } else {
                 // === CASO B: COMENZAR A SEGUIR ===
                 
-                // Primero: Verificar si él ya me sigue a mí (vulnerable a inyección SQL)
+                // Primero: Verificar si él ya me sigue a mí
                 const [elMeSigues] = await sequelize.query(
-                    `SELECT * FROM se_relaciona WHERE id_solicitador = ${id_receptor} AND id_receptor = ${id_solicitador}`
+                    'SELECT * FROM se_relaciona WHERE id_solicitador = :id_receptor AND id_receptor = :id_solicitador',
+                { replacements: { id_receptor, id_solicitador }, type: QueryTypes.SELECT }
                 );
-                const elMeSigue = elMeSigues[0];
+                const elMeSigue = elMeSigues;
 
                 if (elMeSigue) {
                     // ¡HAY COINCIDENCIA! -> AMISTAD
-                    // 1. Crear mi vínculo como AMIGO (vulnerable a inyección SQL)
+                    // 1. Crear mi vínculo como AMIGO
                     await sequelize.query(
-                        `INSERT INTO se_relaciona (id_solicitador, id_receptor, tipo_vinculo, naturaleza_del_vinculo, estado_vinculo, descripcion_del_vinculo) 
-                         VALUES (${id_solicitador}, ${id_receptor}, 'SIMETRICA', 'AMIGO', 'ACEPTADA', 'Amistad')`
-                    );
+                        'INSERT INTO se_relaciona (id_solicitador, id_receptor, tipo_vinculo, naturaleza_del_vinculo, estado_vinculo, descripcion_del_vinculo) VALUES (:id_solicitador, :id_receptor, :tipo_vinculo, :naturaleza_del_vinculo, :estado_vinculo, :descripcion_del_vinculo)',
+                { replacements: { id_solicitador, id_receptor, tipo_vinculo: 'SIMETRICA', naturaleza_del_vinculo: 'AMIGO', estado_vinculo: 'ACEPTADA', descripcion_del_vinculo: 'Amistad' }, type: QueryTypes.INSERT }
+                );
 
-                    // 2. Actualizar el vínculo de él a AMIGO (vulnerable a inyección SQL)
+                    // 2. Actualizar el vínculo de él a AMIGO
                     await sequelize.query(
-                        `UPDATE se_relaciona 
-                         SET tipo_vinculo = 'SIMETRICA', naturaleza_del_vinculo = 'AMIGO' 
-                         WHERE id_solicitador = ${id_receptor} AND id_receptor = ${id_solicitador}`
-                    );
+                        'UPDATE se_relaciona SET tipo_vinculo = :tipo_vinculo, naturaleza_del_vinculo = :naturaleza_del_vinculo WHERE id_solicitador = :id_receptor AND id_receptor = :id_solicitador',
+                { replacements: { tipo_vinculo: 'SIMETRICA', naturaleza_del_vinculo: 'AMIGO', id_receptor, id_solicitador }, type: QueryTypes.UPDATE }
+                );
 
                     return res.json({ nuevo_estado: 'AMIGO' });
 
                 } else {
-                    // SOLO YO LO SIGO -> SEGUIR NORMAL (vulnerable a inyección SQL)
+                    // SOLO YO LO SIGO -> SEGUIR NORMAL
                     await sequelize.query(
-                        `INSERT INTO se_relaciona (id_solicitador, id_receptor, tipo_vinculo, naturaleza_del_vinculo, estado_vinculo, descripcion_del_vinculo) 
-                         VALUES (${id_solicitador}, ${id_receptor}, 'ASIMETRICA', 'SIGUE', 'ACEPTADA', 'Seguidor')`
-                    );
+                        'INSERT INTO se_relaciona (id_solicitador, id_receptor, tipo_vinculo, naturaleza_del_vinculo, estado_vinculo, descripcion_del_vinculo) VALUES (:id_solicitador, :id_receptor, :tipo_vinculo, :naturaleza_del_vinculo, :estado_vinculo, :descripcion_del_vinculo)',
+                { replacements: { id_solicitador, id_receptor, tipo_vinculo: 'ASIMETRICA', naturaleza_del_vinculo: 'SIGUE', estado_vinculo: 'ACEPTADA', descripcion_del_vinculo: 'Seguidor' }, type: QueryTypes.INSERT }
+                );
 
                     return res.json({ nuevo_estado: 'SIGUE' });
                 }

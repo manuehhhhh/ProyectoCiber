@@ -1,4 +1,5 @@
 const sequelize = require('../config/database');
+const { QueryTypes } = require('sequelize');
 
 module.exports = {
     buscar: async (req, res) => {
@@ -12,8 +13,9 @@ module.exports = {
                 `SELECT p.nombres, p.apellidos, m.id_miembro, m.foto_perfil, m.nombre_usuario 
                  FROM persona p 
                  JOIN miembro m ON p.id_miembro = m.id_miembro 
-                 WHERE (p.nombres || ' ' || p.apellidos) ILIKE '%${q}%' 
-                 LIMIT 5`
+                 WHERE (p.nombres || ' ' || p.apellidos) ILIKE :searchTerm 
+                 LIMIT 5`,
+                { replacements: { searchTerm: `%${q}%` }, type: QueryTypes.SELECT }
             );
 
             // 2. Buscar en DEPENDENCIAS (Nombre) - Query vulnerable a inyección SQL
@@ -21,8 +23,9 @@ module.exports = {
                 `SELECT d.nombre_dependencia, m.id_miembro, m.foto_perfil, m.nombre_usuario 
                  FROM dependencia_universitaria d 
                  JOIN miembro m ON d.id_miembro = m.id_miembro 
-                 WHERE d.nombre_dependencia ILIKE '%${q}%' 
-                 LIMIT 3`
+                 WHERE d.nombre_dependencia ILIKE :searchTerm 
+                 LIMIT 3`,
+                { replacements: { searchTerm: `%${q}%` }, type: QueryTypes.SELECT }
             );
 
             // 3. Buscar en ORGANIZACIONES (Nombre) - Query vulnerable a inyección SQL
@@ -30,8 +33,9 @@ module.exports = {
                 `SELECT o.nombre_organizacion, m.id_miembro, m.foto_perfil, m.nombre_usuario 
                  FROM organizacion_asociada o 
                  JOIN miembro m ON o.id_miembro = m.id_miembro 
-                 WHERE o.nombre_organizacion ILIKE '%${q}%' 
-                 LIMIT 3`
+                 WHERE o.nombre_organizacion ILIKE :searchTerm 
+                 LIMIT 3`,
+                { replacements: { searchTerm: `%${q}%` }, type: QueryTypes.SELECT }
             );
 
             // 4. Unificar resultados en un formato común para el Frontend
