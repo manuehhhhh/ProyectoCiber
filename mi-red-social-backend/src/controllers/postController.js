@@ -49,9 +49,7 @@ module.exports = {
     // 2. OBTENER POSTS (Ordenados por fecha)
     obtenerPosts: async (req, res) => {
         try {
-            const [posts] = await sequelize.query(
-                `SELECT * FROM post ORDER BY tiempo_post DESC`
-            );
+            const posts = await sequelize.query('SELECT * FROM post ORDER BY tiempo_post DESC', { type: QueryTypes.SELECT });
             res.json(posts);
         } catch (error) {
             console.error("Error al obtener posts:", error);

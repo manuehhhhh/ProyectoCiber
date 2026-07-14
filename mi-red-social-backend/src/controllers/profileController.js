@@ -32,9 +32,14 @@ module.exports = {
     obtenerPerfil: async (req, res) => {
         const { id } = req.params;
 
+        // Validar que el ID sea un número entero válido
+        if (!/^\d+$/.test(id)) {
+            return res.status(400).json({ error: 'ID inválido' });
+        }
+
         try {
-            // 1. OBTENER DATOS BASE (vulnerable a inyección SQL)
-            const [miembros] = await sequelize.query('SELECT * FROM miembro WHERE id_miembro = :id', { replacements: { id }, type: QueryTypes.SELECT });
+            // 1. OBTENER DATOS BASE
+            const [miembros] = await sequelize.query('SELECT * FROM miembro WHERE id_miembro = :id', { replacements: { id: parseInt(id, 10) }, type: QueryTypes.SELECT });
             const miembro = miembros[0];
             if (!miembro) return res.status(404).json({ error: 'Usuario no encontrado' });
 

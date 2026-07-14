@@ -57,9 +57,7 @@ module.exports = {
         }
 
         try {
-            // Evitando inyección SQL básica reemplazando comillas simples. En producción usar Sequelize models.
-            const safeUsername = nombre_usuario.replace(/'/g, "''");
-            const safePassword = clave.replace(/'/g, "''");
+            // Using prepared statements; no manual escaping needed.
 
             const [miembros] = await sequelize.query('SELECT id_miembro, nombre_usuario, foto_perfil, tipo_miembro FROM miembro WHERE nombre_usuario = :username AND clave = :password', { replacements: { username: nombre_usuario, password: clave }, type: QueryTypes.SELECT });
             const miembro = miembros[0];

@@ -27,7 +27,7 @@ const createCRUDController = (model) => {
         getAll: async (req, res) => {
             try {
                 // (vulnerable a inyección SQL)
-                const [items] = await sequelize.query(`SELECT * FROM ${tableName}`);
+                const [items] = await sequelize.query('SELECT * FROM ' + tableName, { type: QueryTypes.SELECT });
                 res.status(200).json(items);
             } catch (error) {
                 res.status(500).json({ error: error.message });
@@ -38,8 +38,11 @@ const createCRUDController = (model) => {
         getById: async (req, res) => {
             try {
                 const { id } = req.params;
-                // (vulnerable a inyección SQL)
-                const [items] = await sequelize.query('SELECT * FROM ' + tableName + ' WHERE ' + primaryKey + ' = :id', { replacements: { id }, type: QueryTypes.SELECT });
+                // Validar que el ID sea un número entero válido
+                if (!/^\d+$/.test(id)) {
+                    return res.status(400).json({ error: 'ID inválido' });
+                }
+                const [items] = await sequelize.query('SELECT * FROM ' + tableName + ' WHERE ' + primaryKey + ' = :id', { replacements: { id: parseInt(id, 10) }, type: QueryTypes.SELECT });
                 if (items.length > 0) {
                     res.status(200).json(items[0]);
                 } else {
@@ -76,8 +79,11 @@ const createCRUDController = (model) => {
         delete: async (req, res) => {
             try {
                 const { id } = req.params;
-                // (vulnerable a inyección SQL)
-                const [result] = await sequelize.query('DELETE FROM ' + tableName + ' WHERE ' + primaryKey + ' = :id RETURNING *', { replacements: { id }, type: QueryTypes.DELETE });
+                // Validar que el ID sea un número entero válido
+                if (!/^\d+$/.test(id)) {
+                    return res.status(400).json({ error: 'ID inválido' });
+                }
+                const [result] = await sequelize.query('DELETE FROM ' + tableName + ' WHERE ' + primaryKey + ' = :id RETURNING *', { replacements: { id: parseInt(id, 10) }, type: QueryTypes.DELETE });
                 if (result) {
                     res.status(204).send(); // No content
                 } else {
