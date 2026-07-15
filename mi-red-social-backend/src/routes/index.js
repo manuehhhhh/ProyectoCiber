@@ -16,6 +16,10 @@ const models = require('../models'); // Modelos de Sequelize
 const upload = require('../config/uploadConfig'); // Configuración de Multer (Imágenes)
 const { authenticate } = require('../middleware/auth'); // Middleware de seguridad (opcional)
 
+// Validación de entrada (express-validator) — contramedida de inyección (CWE-89, anteproyecto §3.3)
+const { handleValidation } = require('../middleware/validate');
+const V = require('../validators');
+
 // =====================================================================
 // 2. IMPORTACIÓN DE CONTROLADORES
 // =====================================================================
@@ -39,29 +43,30 @@ const grupoController = require('../controllers/grupoController');
 // A.1. MÓDULO DE USUARIOS Y PERFIL
 // ---------------------------------------------------------------------
 // Iniciar sesión
-router.post('/login', miembroController.login);
+router.post('/login', V.loginValidator, handleValidation, miembroController.login);
 
 // Registrar usuario
-router.post('/register', miembroController.register);
+router.post('/register', V.registerValidator, handleValidation, miembroController.register);
 
 // Obtener la información completa del perfil de un usuario
-router.get('/profile/:id', profileController.obtenerPerfil);
+router.get('/profile/:id', V.idParamValidator('id'), handleValidation, profileController.obtenerPerfil);
 
 // Subir o actualizar la foto de perfil (Usa Multer para procesar la imagen)
-router.post('/miembro/:id/foto', upload.single('foto'), miembroController.actualizarFoto);
+router.post('/miembro/:id/foto', V.idParamValidator('id'), handleValidation, upload.single('foto'), miembroController.actualizarFoto);
 
 
 // ---------------------------------------------------------------------
 // A.2. MÓDULO DE PUBLICACIONES (FEED)
 // ---------------------------------------------------------------------
 // Crear un nuevo post (permite subir imagen opcional)
-router.post('/publicar', upload.single('imagen_post'), postController.crearPost);
+// Multer va PRIMERO para poblar req.body desde el multipart; luego se valida.
+router.post('/publicar', upload.single('imagen_post'), V.postValidator, handleValidation, postController.crearPost);
 
 // Obtener el feed de publicaciones (general o filtrado)
 router.get('/post', postController.obtenerPosts);
 
 // Eliminar una publicación específica
-router.delete('/post/:id', postController.eliminarPost);
+router.delete('/post/:id', V.idParamValidator('id'), handleValidation, postController.eliminarPost);
 
 
 // ---------------------------------------------------------------------
@@ -69,12 +74,12 @@ router.delete('/post/:id', postController.eliminarPost);
 // ---------------------------------------------------------------------
 // -- Likes --
 router.post('/likes/toggle', likesController.toggleLike); // Dar o quitar like
-router.get('/likes/:id_post', likesController.obtenerLikes); // Ver likes de un post
+router.get('/likes/:id_post', V.idParamValidator('id_post'), handleValidation, likesController.obtenerLikes); // Ver likes de un post
 
 // -- Comentarios --
-router.get('/comments/:id_post', commentsController.obtenerComentarios); // Listar comentarios
-router.post('/comments', commentsController.crearComentario); // Nuevo comentario
-router.get('/comments/count/:id_post', commentsController.contarComentarios); // Contador simple
+router.get('/comments/:id_post', V.idParamValidator('id_post'), handleValidation, commentsController.obtenerComentarios); // Listar comentarios
+router.post('/comments', V.commentValidator, handleValidation, commentsController.crearComentario); // Nuevo comentario
+router.get('/comments/count/:id_post', V.idParamValidator('id_post'), handleValidation, commentsController.contarComentarios); // Contador simple
 
 
 // ---------------------------------------------------------------------
@@ -104,7 +109,7 @@ router.post('/eventos/suscribirse', eventController.toggleAsistencia);
 // A.6. UTILIDADES
 // ---------------------------------------------------------------------
 // Buscador global (Personas, Organizaciones, etc.)
-router.get('/search', searchController.buscar);
+router.get('/search', V.searchValidator, handleValidation, searchController.buscar);
 router.get('/grupo', grupoController.obtenerGrupos);
 router.post('/mensaje', mensajeController.crearMensaje);
 
@@ -124,15 +129,12 @@ for (const modelName in models) {
         const controller = createCRUDController(model);
         const route = express.Router();
 
-        // Middleware de autenticación (Descomentar para proteger todo el CRUD)
-        // route.use(authenticate); 
-
-        // Definición de Endpoints CRUD estándar
-        route.post('/', controller.create);      // Crear
+        // CRUD genérico de SOLO LECTURA.
+        // Se eliminaron POST/PUT/DELETE genéricos: permitían inyección SQL por
+        // identificador (nombres de columna desde el body) y escritura/borrado sin
+        // autenticación. Todas las escrituras reales usan las rutas explícitas de la Sección A.
         route.get('/', controller.getAll);       // Leer todos
         route.get('/:id', controller.getById);   // Leer uno por ID
-        route.put('/:id', controller.update);    // Actualizar
-        route.delete('/:id', controller.delete); // Borrar
 
         // Montar la ruta con el nombre del modelo en minúsculas
         router.use(`/${modelName.toLowerCase()}`, route);
