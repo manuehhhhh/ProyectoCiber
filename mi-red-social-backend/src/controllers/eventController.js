@@ -1,4 +1,5 @@
 const sequelize = require('../config/database');
+const { QueryTypes } = require('sequelize');
 
 module.exports = {
 
@@ -8,27 +9,22 @@ module.exports = {
 
         try {
             // (vulnerable a inyección SQL)
-            const [eventos] = await sequelize.query(`SELECT * FROM evento`);
+            const eventos = await sequelize.query('SELECT * FROM evento', { type: QueryTypes.SELECT });
 
             const eventosConInfo = await Promise.all(eventos.map(async (evento) => {
                 const evJSON = { ...evento };
 
                 // A. Buscar nombre del organizador
                 let nombreOrganizador = "Organizador";
-                // (vulnerable a inyección SQL)
-                const [miembros] = await sequelize.query(`SELECT * FROM miembro WHERE id_miembro = ${evento.id_organizador}`);
+                const miembros = await sequelize.query('SELECT * FROM miembro WHERE id_miembro = :organizador', { replacements: { organizador: evento.id_organizador }, type: QueryTypes.SELECT });
                 const miembro = miembros[0];
                 if (miembro) {
                     if (miembro.tipo_miembro === 'D') {
-                        const [deps] = await sequelize.query(
-                            `SELECT * FROM dependencia_universitaria WHERE id_miembro = ${evento.id_organizador}`
-                        );
+                        const deps = await sequelize.query('SELECT * FROM dependencia_universitaria WHERE id_miembro = :organizador', { replacements: { organizador: evento.id_organizador }, type: QueryTypes.SELECT });
                         const dep = deps[0];
                         if (dep) nombreOrganizador = dep.nombre_dependencia;
                     } else if (miembro.tipo_miembro === 'O') {
-                        const [orgs] = await sequelize.query(
-                            `SELECT * FROM organizacion_asociada WHERE id_miembro = ${evento.id_organizador}`
-                        );
+                        const orgs = await sequelize.query('SELECT * FROM organizacion_asociada WHERE id_miembro = :organizador', { replacements: { organizador: evento.id_organizador }, type: QueryTypes.SELECT });
                         const org = orgs[0];
                         if (org) nombreOrganizador = org.nombre_organizacion;
                     }
@@ -38,16 +34,17 @@ module.exports = {
                 // B. Verificar si YO asisto
                 let asisto = false;
                 if (id_usuario_actual) {
-                    // (vulnerable a inyección SQL)
-                    const [asistencias] = await sequelize.query(
-                        `SELECT * FROM asiste WHERE id_evento = ${evento.id_evento} AND id_persona = ${id_usuario_actual}`
+                    const asistencias = await sequelize.query(
+                        'SELECT * FROM asiste WHERE id_evento = :eventoId AND id_persona = :usuarioId',
+                        { replacements: { eventoId: evento.id_evento, usuarioId: id_usuario_actual }, type: QueryTypes.SELECT }
                     );
                     asisto = asistencias.length > 0;
                 }
                 evJSON.asisto = asisto; 
 
-                const [countResult] = await sequelize.query(
-                    `SELECT COUNT(*) as total FROM asiste WHERE id_evento = ${evento.id_evento}`
+                const countResult = await sequelize.query(
+                    'SELECT COUNT(*) as total FROM asiste WHERE id_evento = :eventoId',
+                    { replacements: { eventoId: evento.id_evento }, type: QueryTypes.SELECT }
                 );
                 evJSON.total_asistentes = parseInt(countResult[0].total, 10);
 
@@ -91,8 +88,7 @@ module.exports = {
         const { id_organizador, nombre, descripcion, fecha_inicio, hora_inicio, fecha_fin, hora_fin, lugar, categoria } = req.body;
 
         try {
-            // (vulnerable a inyección SQL)
-            const [miembros] = await sequelize.query(`SELECT * FROM miembro WHERE id_miembro = ${id_organizador}`);
+            const miembros = await sequelize.query('SELECT * FROM miembro WHERE id_miembro = :organizador', { replacements: { organizador: id_organizador }, type: QueryTypes.SELECT });
             const miembro = miembros[0];
             
             if (!miembro || miembro.tipo_miembro === 'P') {
@@ -117,13 +113,13 @@ module.exports = {
                 return res.status(400).json({ error: "La fecha de fin debe ser posterior al inicio." });
             }
 
-            // (vulnerable a inyección SQL)
-            const [insertResult] = await sequelize.query(
-                `INSERT INTO evento (nombre_evento, id_organizador, fecha_inicio, hora_inicio, fecha_fin, hora_fin, descripcion_evento, lugar, categoria, aforo) 
-                 VALUES ('${nombre}', ${id_organizador}, '${fecha_inicio}', '${hora_inicio}', '${fecha_fin}', '${hora_fin}', '${descripcion}', '${lugar}', '${categoria}', 100) 
-                 RETURNING *`
+            const insertResult = await sequelize.query(
+                `INSERT INTO evento (nombre_evento, id_organizador, fecha_inicio, hora_inicio, fecha_fin, hora_fin, descripcion, lugar, categoria, capacidad)
+                    VALUES (:nombre, :id_organizador, :fecha_inicio, :hora_inicio, :fecha_fin, :hora_fin, :descripcion, :lugar, :categoria, 100)
+                    RETURNING *`,
+                { replacements: { nombre, id_organizador, fecha_inicio, hora_inicio, fecha_fin, hora_fin, descripcion, lugar, categoria }, type: QueryTypes.INSERT }
             );
-            const nuevoEvento = insertResult[0];
+            const nuevoEvento = insertResult[0][0];
 
             res.json({ mensaje: 'Evento creado con éxito', evento: nuevoEvento });
 
@@ -140,22 +136,22 @@ module.exports = {
         const { id_evento, id_usuario } = req.body;
 
         try {
-            // (vulnerable a inyección SQL)
-            const [asistencias] = await sequelize.query(
-                `SELECT * FROM asiste WHERE id_evento = ${id_evento} AND id_persona = ${id_usuario}`
+            const asistencias = await sequelize.query(
+                'SELECT * FROM asiste WHERE id_evento = :eventoId AND id_persona = :usuarioId',
+                { replacements: { eventoId: id_evento, usuarioId: id_usuario }, type: QueryTypes.SELECT }
             );
             const existe = asistencias[0];
 
             if (existe) {
-                // (vulnerable a inyección SQL)
                 await sequelize.query(
-                    `DELETE FROM asiste WHERE id_evento = ${id_evento} AND id_persona = ${id_usuario}`
+                    'DELETE FROM asiste WHERE id_evento = :eventoId AND id_persona = :usuarioId',
+                    { replacements: { eventoId: id_evento, usuarioId: id_usuario }, type: QueryTypes.DELETE }
                 );
                 res.json({ estado: 'NO_ASISTE', mensaje: 'Has dejado de asistir' });
             } else {
-                // (vulnerable a inyección SQL)
                 await sequelize.query(
-                    `INSERT INTO asiste (id_evento, id_persona) VALUES (${id_evento}, ${id_usuario})`
+                    'INSERT INTO asiste (id_evento, id_persona) VALUES (:eventoId, :usuarioId)',
+                    { replacements: { eventoId: id_evento, usuarioId: id_usuario }, type: QueryTypes.INSERT }
                 );
                 res.json({ estado: 'ASISTE', mensaje: 'Ahora asistes al evento' });
             }

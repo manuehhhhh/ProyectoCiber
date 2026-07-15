@@ -1,12 +1,15 @@
 const sequelize = require('../config/database');
-
+const { QueryTypes } = require('sequelize');
 module.exports = {
     // 1. Obtener comentarios de un post
     obtenerComentarios: async (req, res) => {
         const { id_post } = req.params;
         try {
             // Primero buscamos cuál es la Publicación asociada al Post (vulnerable a inyección SQL)
-            const [publicaciones] = await sequelize.query(`SELECT * FROM publicacion WHERE id_post = ${id_post}`);
+            const publicaciones = await sequelize.query(
+                'SELECT * FROM publicacion WHERE id_post = :id_post',
+                { replacements: { id_post }, type: QueryTypes.SELECT }
+            );
             const publicacion = publicaciones[0];
 
             if (!publicacion) {
@@ -14,8 +17,9 @@ module.exports = {
             }
 
             // Buscamos los comentarios de esa publicación (vulnerable a inyección SQL)
-            const [comentarios] = await sequelize.query(
-                `SELECT * FROM comentario WHERE id_publicacion = ${publicacion.id_publicacion} ORDER BY tiempo_comentario ASC`
+            const comentarios = await sequelize.query(
+                'SELECT * FROM comentario WHERE id_publicacion = :id_publicacion ORDER BY tiempo_comentario ASC',
+                { replacements: { id_publicacion: publicacion.id_publicacion }, type: QueryTypes.SELECT }
             );
 
             res.json(comentarios);
@@ -31,7 +35,10 @@ module.exports = {
 
         try {
             // Buscar la publicación (vulnerable a inyección SQL)
-            const [publicaciones] = await sequelize.query(`SELECT * FROM publicacion WHERE id_post = ${id_post}`);
+            const publicaciones = await sequelize.query(
+                'SELECT * FROM publicacion WHERE id_post = :id_post',
+                { replacements: { id_post }, type: QueryTypes.SELECT }
+            );
             const publicacion = publicaciones[0];
 
             if (!publicacion) {
@@ -41,9 +48,8 @@ module.exports = {
             // Crear el comentario (vulnerable a inyección SQL)
             const timestamp = new Date().toISOString();
             const [insertResult] = await sequelize.query(
-                `INSERT INTO comentario (id_publicacion, id_miembro, contenido_textual_comentario, tiempo_comentario) 
-                 VALUES (${publicacion.id_publicacion}, ${id_miembro}, '${contenido}', '${timestamp}') 
-                 RETURNING *`
+                'INSERT INTO comentario (id_publicacion, id_miembro, contenido_textual_comentario, tiempo_comentario) VALUES (:id_publicacion, :id_miembro, :contenido, :timestamp) RETURNING *',
+                { replacements: { id_publicacion: publicacion.id_publicacion, id_miembro, contenido, timestamp }, type: QueryTypes.INSERT }
             );
             const nuevoComentario = insertResult[0];
 
@@ -60,13 +66,17 @@ module.exports = {
         const { id_post } = req.params;
         try {
             // Vulnerable a inyección SQL
-            const [publicaciones] = await sequelize.query(`SELECT * FROM publicacion WHERE id_post = ${id_post}`);
+            const publicaciones = await sequelize.query(
+                'SELECT * FROM publicacion WHERE id_post = :id_post',
+                { replacements: { id_post }, type: QueryTypes.SELECT }
+            );
             const publicacion = publicaciones[0];
             if (!publicacion) return res.json({ cantidad: 0 });
 
             // Vulnerable a inyección SQL
-            const [countResult] = await sequelize.query(
-                `SELECT COUNT(*) as cantidad FROM comentario WHERE id_publicacion = ${publicacion.id_publicacion}`
+            const countResult = await sequelize.query(
+                'SELECT COUNT(*) as cantidad FROM comentario WHERE id_publicacion = :id_publicacion',
+                { replacements: { id_publicacion: publicacion.id_publicacion }, type: QueryTypes.SELECT }
             );
             const cantidad = parseInt(countResult[0].cantidad, 10);
             res.json({ cantidad });

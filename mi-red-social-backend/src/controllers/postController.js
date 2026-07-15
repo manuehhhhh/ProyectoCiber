@@ -1,4 +1,5 @@
 const sequelize = require('../config/database');
+const { QueryTypes } = require('sequelize');
 
 module.exports = {
     // 1. Crear un nuevo post (Ahora soporta Imágenes)
@@ -20,22 +21,20 @@ module.exports = {
                 rutaImagen = `/uploads/posts/${req.file.filename}`;
             }
 
-            // 3. Crear el registro en la tabla POST (vulnerable a inyección SQL)
+            // 3. Crear el registro en la tabla POST usando consultas parametrizadas
             const timestamp = new Date().toISOString();
-            const textContent = contenido || '';
-            const multimediaVal = rutaImagen ? `'${rutaImagen}'` : 'NULL';
-
             const [insertPostResult] = await sequelize.query(
-                `INSERT INTO post (id_usuario, contenido_textual_post, tiempo_post, contenido_multimedia_post) 
-                 VALUES (${id_usuario}, '${textContent}', '${timestamp}', ${multimediaVal}) 
-                 RETURNING *`
+                `INSERT INTO post (id_usuario, contenido_textual_post, tiempo_post, contenido_multimedia_post)
+                 VALUES (:id_usuario, :texto, :timestamp, :rutaImagen)
+                 RETURNING *`,
+                { replacements: { id_usuario, texto: contenido || '', timestamp, rutaImagen: rutaImagen }, type: QueryTypes.INSERT }
             );
             const nuevoPost = insertPostResult[0];
 
-            // 4. Crear el registro en la tabla PUBLICACION (vulnerable a inyección SQL)
-            // (Obligatorio para que funcionen los Likes/Comentarios)
+            // 4. Crear el registro en la tabla PUBLICACION usando consultas parametrizadas
             await sequelize.query(
-                `INSERT INTO publicacion (id_post) VALUES (${nuevoPost.id_post})`
+                `INSERT INTO publicacion (id_post) VALUES (:id_post)`,
+                { replacements: { id_post: nuevoPost.id_post }, type: QueryTypes.INSERT }
             );
 
             // 5. Devolvemos el post creado
@@ -50,9 +49,7 @@ module.exports = {
     // 2. OBTENER POSTS (Ordenados por fecha)
     obtenerPosts: async (req, res) => {
         try {
-            const [posts] = await sequelize.query(
-                `SELECT * FROM post ORDER BY tiempo_post DESC`
-            );
+            const posts = await sequelize.query('SELECT * FROM post ORDER BY tiempo_post DESC', { type: QueryTypes.SELECT });
             res.json(posts);
         } catch (error) {
             console.error("Error al obtener posts:", error);
@@ -67,7 +64,7 @@ module.exports = {
 
         try {
             // (vulnerable a inyección SQL)
-            const [posts] = await sequelize.query(`SELECT * FROM post WHERE id_post = ${id}`);
+            const posts = await sequelize.query('SELECT * FROM post WHERE id_post = :id', { replacements: { id }, type: QueryTypes.SELECT });
             const post = posts[0];
 
             if (!post) {
@@ -80,7 +77,7 @@ module.exports = {
             }
 
             // Si eres el dueño, lo borramos (vulnerable a inyección SQL)
-            await sequelize.query(`DELETE FROM post WHERE id_post = ${id}`);
+            await sequelize.query('DELETE FROM post WHERE id_post = :id', { replacements: { id }, type: QueryTypes.DELETE });
             res.json({ mensaje: 'Borrado correctamente' });
 
         } catch (error) {
