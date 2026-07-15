@@ -9,7 +9,7 @@ const DUMMY_HASH = bcrypt.hashSync('usuario_inexistente', SALT_ROUNDS);
 
 module.exports = {
     // 1. Obtener datos de un miembro (para el perfil)
-    obtenerMiembro: async (req, res) => {
+    obtenerMiembro: async (req, res, next) => {
         const { id } = req.params;
         try {
             // Se seleccionan columnas explícitas: NUNCA se expone 'clave' al cliente.
@@ -21,13 +21,12 @@ module.exports = {
             if (!miembro) return res.status(404).json({ error: 'Miembro no encontrado' });
             res.json(miembro);
         } catch (error) {
-            console.error(error);
-            res.status(500).json({ error: 'Error al obtener miembro' });
+            next(error);
         }
     },
 
     // 2. Actualizar Foto de Perfil
-    actualizarFoto: async (req, res) => {
+    actualizarFoto: async (req, res, next) => {
         const { id } = req.params;
         try {
             if (!req.file) {
@@ -46,13 +45,12 @@ module.exports = {
             );
             res.json({ mensaje: 'Foto actualizada', ruta: rutaImagen });
         } catch (error) {
-            console.error("Error al actualizar foto:", error);
-            res.status(500).json({ error: 'Error interno al guardar la imagen' });
+            next(error);
         }
     },
 
     // 3. Iniciar Sesión (Login) — verifica con bcrypt, NO compara la clave en el WHERE
-    login: async (req, res) => {
+    login: async (req, res, next) => {
         const { nombre_usuario, clave } = req.body;
         if (!nombre_usuario || !clave) {
             return res.status(400).json({ error: 'Faltan credenciales' });
@@ -79,13 +77,12 @@ module.exports = {
             delete miembro.clave; // nunca devolver el hash al cliente
             res.json({ mensaje: 'Inicio de sesión exitoso', usuario: miembro });
         } catch (error) {
-            console.error("Error en login:", error);
-            res.status(500).json({ error: 'Error interno del servidor' });
+            next(error);
         }
     },
 
     // 4. Registrar Usuario — guarda bcrypt(clave), NUNCA la clave en claro
-    register: async (req, res) => {
+    register: async (req, res, next) => {
         const { nombre_usuario, clave, tipo_miembro, persona, dependencia, organizacion } = req.body;
         if (!nombre_usuario || !clave || !tipo_miembro) {
             return res.status(400).json({ error: 'Faltan campos obligatorios' });
@@ -137,11 +134,11 @@ module.exports = {
 
             res.status(201).json({ mensaje: 'Cuenta creada exitosamente', id_miembro });
         } catch (error) {
-            console.error("Error en registro:", error);
+            // Clave duplicada (nombre_usuario o correo ya en uso)
             if (error.original && error.original.code === '23505') {
                 return res.status(409).json({ error: 'El nombre de usuario o correo ya está en uso.' });
             }
-            res.status(500).json({ error: 'Error al procesar el registro.' });
+            next(error);
         }
     }
 };

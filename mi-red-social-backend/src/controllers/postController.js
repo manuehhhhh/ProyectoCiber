@@ -3,7 +3,7 @@ const { QueryTypes } = require('sequelize');
 
 module.exports = {
     // 1. Crear un nuevo post (Ahora soporta Imágenes)
-    crearPost: async (req, res) => {
+    crearPost: async (req, res, next) => {
         // 'contenido' viene del texto, 'req.file' viene de la imagen subida
         const { id_usuario, contenido } = req.body;
 
@@ -41,24 +41,22 @@ module.exports = {
             res.json(nuevoPost);
 
         } catch (error) {
-            console.error("Error al crear post:", error);
-            res.status(500).json({ error: 'Error interno al publicar' });
+            next(error);
         }
     },
 
     // 2. OBTENER POSTS (Ordenados por fecha)
-    obtenerPosts: async (req, res) => {
+    obtenerPosts: async (req, res, next) => {
         try {
             const posts = await sequelize.query('SELECT * FROM post ORDER BY tiempo_post DESC', { type: QueryTypes.SELECT });
             res.json(posts);
         } catch (error) {
-            console.error("Error al obtener posts:", error);
-            res.status(500).json({ error: 'Error al obtener posts' });
+            next(error);
         }
     },
 
     // 3. ELIMINAR POST (Nueva función)
-    eliminarPost: async (req, res) => {
+    eliminarPost: async (req, res, next) => {
         const { id } = req.params; // El ID del post a borrar
         const { id_usuario_actual } = req.query; // Quién intenta borrarlo
 
@@ -81,8 +79,7 @@ module.exports = {
             res.json({ mensaje: 'Borrado correctamente' });
 
         } catch (error) {
-            console.error(error);
-            res.status(500).json({ error: 'Error al eliminar' });
+            next(error);
         }
     }
 };

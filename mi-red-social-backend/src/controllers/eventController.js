@@ -4,7 +4,7 @@ const { QueryTypes } = require('sequelize');
 module.exports = {
 
     // 1. OBTENER TODOS LOS EVENTOS
-    obtenerEventos: async (req, res) => {
+    obtenerEventos: async (req, res, next) => {
         const { id_usuario_actual } = req.query;
 
         try {
@@ -79,12 +79,11 @@ module.exports = {
             res.json(eventosConInfo);
 
         } catch (error) {
-            console.error(error);
-            res.status(500).json({ error: 'Error al cargar eventos' });
+            next(error);
         }
     },
     // 2. CREAR EVENTO
-    crearEvento: async (req, res) => {
+    crearEvento: async (req, res, next) => {
         const { id_organizador, nombre, descripcion, fecha_inicio, hora_inicio, fecha_fin, hora_fin, lugar, categoria } = req.body;
 
         try {
@@ -124,15 +123,14 @@ module.exports = {
             res.json({ mensaje: 'Evento creado con éxito', evento: nuevoEvento });
 
         } catch (error) {
-            console.error(error);
-            if (error.name === 'SequelizeDatabaseError' && error.parent.code === '23514') {
+            if (error.name === 'SequelizeDatabaseError' && error.parent && error.parent.code === '23514') {
                  return res.status(400).json({ error: 'Error en las fechas: Verifica que el fin sea después del inicio.' });
             }
-            res.status(500).json({ error: 'Error al crear evento' });
+            next(error);
         }
     },
     // 3. SUSCRIBIRSE / ASISTIR
-    toggleAsistencia: async (req, res) => {
+    toggleAsistencia: async (req, res, next) => {
         const { id_evento, id_usuario } = req.body;
 
         try {
@@ -157,8 +155,7 @@ module.exports = {
             }
 
         } catch (error) {
-            console.error(error);
-            res.status(500).json({ error: 'Error al cambiar asistencia' });
+            next(error);
         }
     }
 };
