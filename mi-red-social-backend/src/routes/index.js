@@ -124,15 +124,12 @@ for (const modelName in models) {
         const controller = createCRUDController(model);
         const route = express.Router();
 
-        // Middleware de autenticación (Descomentar para proteger todo el CRUD)
-        // route.use(authenticate); 
-
-        // Definición de Endpoints CRUD estándar
-        route.post('/', controller.create);      // Crear
+        // CRUD genérico de SOLO LECTURA.
+        // Se eliminaron POST/PUT/DELETE genéricos: permitían inyección SQL por
+        // identificador (nombres de columna desde el body) y escritura/borrado sin
+        // autenticación. Todas las escrituras reales usan las rutas explícitas de la Sección A.
         route.get('/', controller.getAll);       // Leer todos
         route.get('/:id', controller.getById);   // Leer uno por ID
-        route.put('/:id', controller.update);    // Actualizar
-        route.delete('/:id', controller.delete); // Borrar
 
         // Montar la ruta con el nombre del modelo en minúsculas
         router.use(`/${modelName.toLowerCase()}`, route);

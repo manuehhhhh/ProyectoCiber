@@ -1,95 +1,57 @@
 const sequelize = require('../config/database');
+const { QueryTypes } = require('sequelize');
+
+/*
+ * CRUD genérico de SOLO LECTURA.
+ *
+ * Cambios de seguridad respecto a la versión vulnerable:
+ *  - Se ELIMINARON create / update / delete: construían SQL concatenando los
+ *    NOMBRES de columna que venían del cuerpo de la petición (Object.keys(req.body)),
+ *    lo que permitía inyección SQL por identificador. La app ya tiene rutas
+ *    explícitas y parametrizadas para todas sus escrituras, así que estos métodos
+ *    genéricos no hacían falta.
+ *  - getById valida que el id sea entero y usa parámetro (:id).
+ *  - Se elimina la columna 'clave' (hash de contraseña) de cualquier respuesta,
+ *    para que ningún GET pueda filtrar el hash al cliente.
+ */
+
+// Quita campos sensibles (p. ej. el hash de la contraseña) antes de responder.
+const limpiarSensibles = (fila) => {
+    if (fila && typeof fila === 'object') {
+        delete fila.clave;
+    }
+    return fila;
+};
 
 const createCRUDController = (model) => {
+    // OJO: tableName y primaryKey provienen del MODELO (lado servidor), nunca del usuario.
     const tableName = model.tableName;
     const primaryKey = model.primaryKeyAttribute || 'id';
 
     return {
-        // Create a new item
-        create: async (req, res) => {
-            try {
-                const fields = Object.keys(req.body);
-                if (fields.length === 0) {
-                    return res.status(400).json({ error: 'No data provided' });
-                }
-                const values = fields.map(field => {
-                    const val = req.body[field];
-                    if (val === null) return 'NULL';
-                    if (typeof val === 'string') return `'${val}'`;
-                    return val;
-                });
-                
-                // (vulnerable a inyección SQL)
-                const queryStr = `INSERT INTO ${tableName} (${fields.join(', ')}) VALUES (${values.join(', ')}) RETURNING *`;
-                const [result] = await sequelize.query(queryStr);
-                res.status(201).json(result[0] || result);
-            } catch (error) {
-                res.status(500).json({ error: error.message });
-            }
-        },
-
-        // Get all items
+        // Leer todos
         getAll: async (req, res) => {
             try {
-                // (vulnerable a inyección SQL)
-                const [items] = await sequelize.query(`SELECT * FROM ${tableName}`);
-                res.status(200).json(items);
+                const items = await sequelize.query('SELECT * FROM ' + tableName, { type: QueryTypes.SELECT });
+                res.status(200).json(items.map(limpiarSensibles));
             } catch (error) {
                 res.status(500).json({ error: error.message });
             }
         },
 
-        // Get a single item by ID
+        // Leer uno por ID
         getById: async (req, res) => {
             try {
                 const { id } = req.params;
-                // (vulnerable a inyección SQL)
-                const [items] = await sequelize.query(`SELECT * FROM ${tableName} WHERE ${primaryKey} = ${id}`);
+                if (!/^\d+$/.test(id)) {
+                    return res.status(400).json({ error: 'ID inválido' });
+                }
+                const items = await sequelize.query(
+                    'SELECT * FROM ' + tableName + ' WHERE ' + primaryKey + ' = :id',
+                    { replacements: { id: parseInt(id, 10) }, type: QueryTypes.SELECT }
+                );
                 if (items.length > 0) {
-                    res.status(200).json(items[0]);
-                } else {
-                    res.status(404).json({ message: `${model.name} not found` });
-                }
-            } catch (error) {
-                res.status(500).json({ error: error.message });
-            }
-        },
-
-        // Update an item by ID
-        update: async (req, res) => {
-            try {
-                const { id } = req.params;
-                const fields = Object.keys(req.body);
-                if (fields.length === 0) {
-                    return res.status(400).json({ error: 'No update data provided' });
-                }
-                const updates = fields.map(field => {
-                    const val = req.body[field];
-                    const formattedVal = (val === null) ? 'NULL' : (typeof val === 'string' ? `'${val}'` : val);
-                    return `${field} = ${formattedVal}`;
-                }).join(', ');
-
-                // (vulnerable a inyección SQL)
-                const queryStr = `UPDATE ${tableName} SET ${updates} WHERE ${primaryKey} = ${id} RETURNING *`;
-                const [result] = await sequelize.query(queryStr);
-                if (result && result.length > 0) {
-                    res.status(200).json(result[0]);
-                } else {
-                    res.status(404).json({ message: `${model.name} not found` });
-                }
-            } catch (error) {
-                res.status(500).json({ error: error.message });
-            }
-        },
-
-        // Delete an item by ID
-        delete: async (req, res) => {
-            try {
-                const { id } = req.params;
-                // (vulnerable a inyección SQL)
-                const [result] = await sequelize.query(`DELETE FROM ${tableName} WHERE ${primaryKey} = ${id} RETURNING *`);
-                if (result) {
-                    res.status(204).send(); // No content
+                    res.status(200).json(limpiarSensibles(items[0]));
                 } else {
                     res.status(404).json({ message: `${model.name} not found` });
                 }
