@@ -2,7 +2,7 @@ const sequelize = require('../config/database');
 const { QueryTypes } = require('sequelize');
 
 module.exports = {
-    buscar: async (req, res, next) => {
+    buscar: async (req, res) => {
         const { q } = req.query; // 'q' es lo que el usuario escribe
 
         if (!q || q.trim() === '') return res.json([]);
@@ -74,7 +74,8 @@ module.exports = {
             res.json(resultados);
 
         } catch (error) {
-            next(error);
+            console.error("Error en búsqueda:", error);
+            res.status(500).json({ error: 'Error en el servidor' });
         }
     }
 };

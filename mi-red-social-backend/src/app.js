@@ -20,36 +20,6 @@ app.use(express.static(path.join(__dirname, '../public')));
 // Use API routes
 app.use('/api', apiRoutes);
 
-// =====================================================================
-// MIDDLEWARE GLOBAL DE MANEJO DE ERRORES
-// Debe ir DESPUÉS de todas las rutas.
-// Captura cualquier error que los controladores no hayan gestionado
-// y devuelve una respuesta HTTP controlada sin exponer detalles internos.
-// =====================================================================
-// eslint-disable-next-line no-unused-vars
-app.use((err, req, res, next) => {
-    // Errores de validación de Sequelize (tipo de dato incorrecto, constraint, etc.)
-    const isSequelizeValidation =
-        err.name === 'SequelizeValidationError' ||
-        err.name === 'SequelizeDatabaseError' ||
-        err.name === 'SequelizeUniqueConstraintError';
-
-    // Errores de sintaxis SQL (típico de inyección SQL que rompe la query)
-    const isSqlSyntaxError =
-        isSequelizeValidation ||
-        (err.parent && err.parent.code === '42601') ||  // PostgreSQL: syntax_error
-        (err.parent && err.parent.code === '42703') ||  // PostgreSQL: undefined_column
-        (err.parent && err.parent.code === '42P01');    // PostgreSQL: undefined_table
-
-    if (isSqlSyntaxError) {
-        return res.status(400).json({ error: 'Solicitud inválida' });
-    }
-
-    // Cualquier otro error inesperado → 500 genérico SIN detalles
-    console.error('Error no manejado:', err);
-    return res.status(500).json({ error: 'Error interno del servidor' });
-});
-
 // Database connection and synchronization
 async function connectDB() {
   try {

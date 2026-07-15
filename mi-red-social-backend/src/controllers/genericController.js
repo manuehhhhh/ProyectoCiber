@@ -30,17 +30,17 @@ const createCRUDController = (model) => {
 
     return {
         // Leer todos
-        getAll: async (req, res, next) => {
+        getAll: async (req, res) => {
             try {
                 const items = await sequelize.query('SELECT * FROM ' + tableName, { type: QueryTypes.SELECT });
                 res.status(200).json(items.map(limpiarSensibles));
             } catch (error) {
-                next(error);
+                res.status(500).json({ error: error.message });
             }
         },
 
         // Leer uno por ID
-        getById: async (req, res, next) => {
+        getById: async (req, res) => {
             try {
                 const { id } = req.params;
                 if (!/^\d+$/.test(id)) {
@@ -56,7 +56,7 @@ const createCRUDController = (model) => {
                     res.status(404).json({ message: `${model.name} not found` });
                 }
             } catch (error) {
-                next(error);
+                res.status(500).json({ error: error.message });
             }
         }
     };
