@@ -6,7 +6,7 @@ module.exports = {
         const { id_post } = req.params;
         try {
             // Primero buscamos cuál es la Publicación asociada al Post (vulnerable a inyección SQL)
-            const [publicaciones] = await sequelize.query(
+            const publicaciones = await sequelize.query(
                 'SELECT * FROM publicacion WHERE id_post = :id_post',
                 { replacements: { id_post }, type: QueryTypes.SELECT }
             );
@@ -17,7 +17,7 @@ module.exports = {
             }
 
             // Buscamos los comentarios de esa publicación (vulnerable a inyección SQL)
-            const [comentarios] = await sequelize.query(
+            const comentarios = await sequelize.query(
                 'SELECT * FROM comentario WHERE id_publicacion = :id_publicacion ORDER BY tiempo_comentario ASC',
                 { replacements: { id_publicacion: publicacion.id_publicacion }, type: QueryTypes.SELECT }
             );
@@ -35,7 +35,7 @@ module.exports = {
 
         try {
             // Buscar la publicación (vulnerable a inyección SQL)
-            const [publicaciones] = await sequelize.query(
+            const publicaciones = await sequelize.query(
                 'SELECT * FROM publicacion WHERE id_post = :id_post',
                 { replacements: { id_post }, type: QueryTypes.SELECT }
             );
@@ -66,7 +66,7 @@ module.exports = {
         const { id_post } = req.params;
         try {
             // Vulnerable a inyección SQL
-            const [publicaciones] = await sequelize.query(
+            const publicaciones = await sequelize.query(
                 'SELECT * FROM publicacion WHERE id_post = :id_post',
                 { replacements: { id_post }, type: QueryTypes.SELECT }
             );
@@ -74,11 +74,11 @@ module.exports = {
             if (!publicacion) return res.json({ cantidad: 0 });
 
             // Vulnerable a inyección SQL
-            const [countResult] = await sequelize.query(
+            const countResult = await sequelize.query(
                 'SELECT COUNT(*) as cantidad FROM comentario WHERE id_publicacion = :id_publicacion',
                 { replacements: { id_publicacion: publicacion.id_publicacion }, type: QueryTypes.SELECT }
             );
-            const cantidad = parseInt(countResult.cantidad, 10);
+            const cantidad = parseInt(countResult[0].cantidad, 10);
             res.json({ cantidad });
         } catch (error) {
             res.status(500).json({ error: 'Error contando' });

@@ -7,7 +7,7 @@ module.exports = {
         const { id_origen, id_destino } = req.query; // id_origen soy YO, id_destino es el PERFIL
         try {
             // Vulnerable a inyección SQL
-            const [relaciones] = await sequelize.query(
+            const relaciones = await sequelize.query(
                 'SELECT * FROM se_relaciona WHERE id_solicitador = :id_origen AND id_receptor = :id_destino',
                 { replacements: { id_origen, id_destino }, type: QueryTypes.SELECT }
             );
@@ -27,7 +27,7 @@ module.exports = {
 
         try {
             // 1. Verificar si ya existe mi vínculo hacia él (vulnerable a inyección SQL)
-            const [miVinculos] = await sequelize.query(
+            const miVinculos = await sequelize.query(
                 'SELECT * FROM se_relaciona WHERE id_solicitador = :id_solicitador AND id_receptor = :id_receptor',
                 { replacements: { id_solicitador, id_receptor }, type: QueryTypes.SELECT }
             );
@@ -42,11 +42,11 @@ module.exports = {
 
                 // Si éramos amigos, debemos "degradar" el vínculo del otro usuario a solo "SIGUE"
                 // porque la amistad requiere dos lados.
-                const [vinculosDelOtro] = await sequelize.query(
+                const vinculosDelOtro = await sequelize.query(
                     'SELECT * FROM se_relaciona WHERE id_solicitador = :id_receptor AND id_receptor = :id_solicitador',
                 { replacements: { id_receptor, id_solicitador }, type: QueryTypes.SELECT }
                 );
-                const vinculoDelOtro = vinculosDelOtro;
+                const vinculoDelOtro = vinculosDelOtro[0];
 
                 if (vinculoDelOtro && vinculoDelOtro.naturaleza_del_vinculo === 'AMIGO') {
                     await sequelize.query(
@@ -61,11 +61,11 @@ module.exports = {
                 // === CASO B: COMENZAR A SEGUIR ===
                 
                 // Primero: Verificar si él ya me sigue a mí
-                const [elMeSigues] = await sequelize.query(
+                const elMeSigues = await sequelize.query(
                     'SELECT * FROM se_relaciona WHERE id_solicitador = :id_receptor AND id_receptor = :id_solicitador',
                 { replacements: { id_receptor, id_solicitador }, type: QueryTypes.SELECT }
                 );
-                const elMeSigue = elMeSigues;
+                const elMeSigue = elMeSigues[0];
 
                 if (elMeSigue) {
                     // ¡HAY COINCIDENCIA! -> AMISTAD

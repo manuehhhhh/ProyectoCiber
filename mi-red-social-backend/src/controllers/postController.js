@@ -64,7 +64,7 @@ module.exports = {
 
         try {
             // (vulnerable a inyección SQL)
-            const [posts] = await sequelize.query('SELECT * FROM post WHERE id_post = :id', { replacements: { id }, type: QueryTypes.SELECT });
+            const posts = await sequelize.query('SELECT * FROM post WHERE id_post = :id', { replacements: { id }, type: QueryTypes.SELECT });
             const post = posts[0];
 
             if (!post) {

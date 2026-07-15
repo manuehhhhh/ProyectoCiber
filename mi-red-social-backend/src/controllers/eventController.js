@@ -9,23 +9,23 @@ module.exports = {
 
         try {
             // (vulnerable a inyección SQL)
-            const [eventos] = await sequelize.query('SELECT * FROM evento', { type: QueryTypes.SELECT });
+            const eventos = await sequelize.query('SELECT * FROM evento', { type: QueryTypes.SELECT });
 
             const eventosConInfo = await Promise.all(eventos.map(async (evento) => {
                 const evJSON = { ...evento };
 
                 // A. Buscar nombre del organizador
                 let nombreOrganizador = "Organizador";
-                const [miembros] = await sequelize.query('SELECT * FROM miembro WHERE id_miembro = :organizador', { replacements: { organizador: evento.id_organizador }, type: QueryTypes.SELECT });
-                const miembro = miembros;
+                const miembros = await sequelize.query('SELECT * FROM miembro WHERE id_miembro = :organizador', { replacements: { organizador: evento.id_organizador }, type: QueryTypes.SELECT });
+                const miembro = miembros[0];
                 if (miembro) {
                     if (miembro.tipo_miembro === 'D') {
-                        const [deps] = await sequelize.query('SELECT * FROM dependencia_universitaria WHERE id_miembro = :organizador', { replacements: { organizador: evento.id_organizador }, type: QueryTypes.SELECT });
-                        const dep = deps;
+                        const deps = await sequelize.query('SELECT * FROM dependencia_universitaria WHERE id_miembro = :organizador', { replacements: { organizador: evento.id_organizador }, type: QueryTypes.SELECT });
+                        const dep = deps[0];
                         if (dep) nombreOrganizador = dep.nombre_dependencia;
                     } else if (miembro.tipo_miembro === 'O') {
-                        const [orgs] = await sequelize.query('SELECT * FROM organizacion_asociada WHERE id_miembro = :organizador', { replacements: { organizador: evento.id_organizador }, type: QueryTypes.SELECT });
-                        const org = orgs;
+                        const orgs = await sequelize.query('SELECT * FROM organizacion_asociada WHERE id_miembro = :organizador', { replacements: { organizador: evento.id_organizador }, type: QueryTypes.SELECT });
+                        const org = orgs[0];
                         if (org) nombreOrganizador = org.nombre_organizacion;
                     }
                 }

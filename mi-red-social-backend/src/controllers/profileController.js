@@ -4,7 +4,7 @@ const sequelize = require('../config/database');
 // Función auxiliar para obtener nombre y handle
 async function obtenerDatosBasicos(id) {
     try {
-        const [miembros] = await sequelize.query('SELECT * FROM miembro WHERE id_miembro = :id', { replacements: { id }, type: QueryTypes.SELECT });
+        const miembros = await sequelize.query('SELECT * FROM miembro WHERE id_miembro = :id', { replacements: { id }, type: QueryTypes.SELECT });
         const miembro = miembros[0];
         if (!miembro) return null;
 
@@ -12,15 +12,15 @@ async function obtenerDatosBasicos(id) {
         let handle = miembro.nombre_usuario;
 
         if (miembro.tipo_miembro === 'P') {
-            const [personas] = await sequelize.query('SELECT * FROM persona WHERE id_miembro = :id', { replacements: { id }, type: QueryTypes.SELECT });
+            const personas = await sequelize.query('SELECT * FROM persona WHERE id_miembro = :id', { replacements: { id }, type: QueryTypes.SELECT });
             const p = personas[0];
             if (p) nombre = `${p.nombres} ${p.apellidos}`;
         } else if (miembro.tipo_miembro === 'D') {
-            const [dependencias] = await sequelize.query('SELECT * FROM dependencia_universitaria WHERE id_miembro = :id', { replacements: { id }, type: QueryTypes.SELECT });
+            const dependencias = await sequelize.query('SELECT * FROM dependencia_universitaria WHERE id_miembro = :id', { replacements: { id }, type: QueryTypes.SELECT });
             const d = dependencias[0];
             if (d) nombre = d.nombre_dependencia;
         } else if (miembro.tipo_miembro === 'O') {
-            const [organizaciones] = await sequelize.query('SELECT * FROM organizacion_asociada WHERE id_miembro = :id', { replacements: { id }, type: QueryTypes.SELECT });
+            const organizaciones = await sequelize.query('SELECT * FROM organizacion_asociada WHERE id_miembro = :id', { replacements: { id }, type: QueryTypes.SELECT });
             const o = organizaciones[0];
             if (o) nombre = o.nombre_organizacion;
         }
@@ -39,7 +39,7 @@ module.exports = {
 
         try {
             // 1. OBTENER DATOS BASE
-            const [miembros] = await sequelize.query('SELECT * FROM miembro WHERE id_miembro = :id', { replacements: { id: parseInt(id, 10) }, type: QueryTypes.SELECT });
+            const miembros = await sequelize.query('SELECT * FROM miembro WHERE id_miembro = :id', { replacements: { id: parseInt(id, 10) }, type: QueryTypes.SELECT });
             const miembro = miembros[0];
             if (!miembro) return res.status(404).json({ error: 'Usuario no encontrado' });
 
@@ -53,18 +53,18 @@ module.exports = {
 
             // 2. DETERMINAR TIPO Y NOMBRE REAL (vulnerable a inyección SQL)
             if (miembro.tipo_miembro === 'P') {
-                const [personas] = await sequelize.query('SELECT * FROM persona WHERE id_miembro = :id', { replacements: { id }, type: QueryTypes.SELECT });
+                const personas = await sequelize.query('SELECT * FROM persona WHERE id_miembro = :id', { replacements: { id }, type: QueryTypes.SELECT });
                 const p = personas[0];
                 if (p) datos.nombre = `${p.nombres} ${p.apellidos}`;
                 
-                const [estudiantes] = await sequelize.query('SELECT * FROM estudiante WHERE id_miembro = :id', { replacements: { id }, type: QueryTypes.SELECT });
+                const estudiantes = await sequelize.query('SELECT * FROM estudiante WHERE id_miembro = :id', { replacements: { id }, type: QueryTypes.SELECT });
                 const esEstudiante = estudiantes[0];
                 if (esEstudiante) {
                     datos.tipo = "Estudiante";
-                    const [estudiaRows] = await sequelize.query('SELECT * FROM estudia WHERE id_estudiante = :id', { replacements: { id }, type: QueryTypes.SELECT });
+                    const estudiaRows = await sequelize.query('SELECT * FROM estudia WHERE id_estudiante = :id', { replacements: { id }, type: QueryTypes.SELECT });
                     const estudia = estudiaRows[0];
                     if (estudia) {
-                        const [carreras] = await sequelize.query('SELECT * FROM carrera WHERE id_carrera = :id_carrera', { replacements: { id_carrera: estudia.id_carrera }, type: QueryTypes.SELECT });
+                        const carreras = await sequelize.query('SELECT * FROM carrera WHERE id_carrera = :id_carrera', { replacements: { id_carrera: estudia.id_carrera }, type: QueryTypes.SELECT });
                         const carrera = carreras[0];
                         if (carrera) datos.carrera = carrera.nombre_carrera;
                     }
@@ -73,13 +73,13 @@ module.exports = {
                 }
 
             } else if (miembro.tipo_miembro === 'D') {
-                const [dependencias] = await sequelize.query('SELECT * FROM dependencia_universitaria WHERE id_miembro = :id', { replacements: { id }, type: QueryTypes.SELECT });
+                const dependencias = await sequelize.query('SELECT * FROM dependencia_universitaria WHERE id_miembro = :id', { replacements: { id }, type: QueryTypes.SELECT });
                 const d = dependencias[0];
                 if (d) datos.nombre = d.nombre_dependencia;
                 datos.tipo = "Dependencia";
 
             } else if (miembro.tipo_miembro === 'O') {
-                const [organizaciones] = await sequelize.query('SELECT * FROM organizacion_asociada WHERE id_miembro = :id', { replacements: { id }, type: QueryTypes.SELECT });
+                const organizaciones = await sequelize.query('SELECT * FROM organizacion_asociada WHERE id_miembro = :id', { replacements: { id }, type: QueryTypes.SELECT });
                 const o = organizaciones[0];
                 if (o) datos.nombre = o.nombre_organizacion;
                 datos.tipo = "Organización";

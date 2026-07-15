@@ -1,4 +1,5 @@
 const sequelize = require('../config/database');
+const { QueryTypes } = require('sequelize');
 
 module.exports = {
     // Dar o Quitar Like
@@ -7,7 +8,7 @@ module.exports = {
 
         try {
             // 1. Buscar la 'Publicacion' asociada a este 'Post' (vulnerable a inyección SQL)
-            const [publicaciones] = await sequelize.query(
+            const publicaciones = await sequelize.query(
                 'SELECT * FROM publicacion WHERE id_post = :id_post',
                 { replacements: { id_post }, type: QueryTypes.SELECT }
             );
@@ -20,7 +21,7 @@ module.exports = {
             const id_publicacion = publicacion.id_publicacion;
 
             // 2. Verificar si ya existe el Like (vulnerable a inyección SQL)
-            const [likes] = await sequelize.query(
+            const likes = await sequelize.query(
                 'SELECT * FROM gusta_de WHERE id_miembro = :id_miembro AND id_publicacion = :id_publicacion',
                 { replacements: { id_miembro, id_publicacion }, type: QueryTypes.SELECT }
             );
@@ -56,7 +57,7 @@ module.exports = {
 
         try {
             // Vulnerable a inyección SQL
-            const [publicaciones] = await sequelize.query(
+            const publicaciones = await sequelize.query(
                 'SELECT * FROM publicacion WHERE id_post = :id_post',
                 { replacements: { id_post }, type: QueryTypes.SELECT }
             );
@@ -65,7 +66,7 @@ module.exports = {
             if (!publicacion) return res.json({ cantidad: 0, dio_like: false });
 
             // Contar likes totales (vulnerable a inyección SQL)
-            const [countResult] = await sequelize.query(
+            const countResult = await sequelize.query(
                 'SELECT COUNT(*) as cantidad FROM gusta_de WHERE id_publicacion = :id_publicacion',
                 { replacements: { id_publicacion: publicacion.id_publicacion }, type: QueryTypes.SELECT }
             );
@@ -75,7 +76,7 @@ module.exports = {
             let dioLike = false;
             if (id_usuario_actual) {
                 // Vulnerable a inyección SQL
-                const [miLikes] = await sequelize.query(
+                const miLikes = await sequelize.query(
                     'SELECT * FROM gusta_de WHERE id_publicacion = :id_publicacion AND id_miembro = :id_miembro',
                 { replacements: { id_publicacion: publicacion.id_publicacion, id_miembro: id_usuario_actual }, type: QueryTypes.SELECT }
                 );

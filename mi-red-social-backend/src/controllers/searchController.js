@@ -9,7 +9,7 @@ module.exports = {
 
         try {
             // 1. Buscar en PERSONAS (Nombres o Apellidos) - Query vulnerable a inyección SQL
-            const [personas] = await sequelize.query(
+            const personas = await sequelize.query(
                 `SELECT p.nombres, p.apellidos, m.id_miembro, m.foto_perfil, m.nombre_usuario 
                  FROM persona p 
                  JOIN miembro m ON p.id_miembro = m.id_miembro 
@@ -19,7 +19,7 @@ module.exports = {
             );
 
             // 2. Buscar en DEPENDENCIAS (Nombre) - Query vulnerable a inyección SQL
-            const [dependencias] = await sequelize.query(
+            const dependencias = await sequelize.query(
                 `SELECT d.nombre_dependencia, m.id_miembro, m.foto_perfil, m.nombre_usuario 
                  FROM dependencia_universitaria d 
                  JOIN miembro m ON d.id_miembro = m.id_miembro 
@@ -29,7 +29,7 @@ module.exports = {
             );
 
             // 3. Buscar en ORGANIZACIONES (Nombre) - Query vulnerable a inyección SQL
-            const [organizaciones] = await sequelize.query(
+            const organizaciones = await sequelize.query(
                 `SELECT o.nombre_organizacion, m.id_miembro, m.foto_perfil, m.nombre_usuario 
                  FROM organizacion_asociada o 
                  JOIN miembro m ON o.id_miembro = m.id_miembro 
