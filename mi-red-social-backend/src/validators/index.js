@@ -19,6 +19,18 @@
 
 const { body, query, param } = require('express-validator');
 
+// Helper reutilizable: campo entero positivo en query string
+const qInt = (campo) =>
+    query(campo)
+        .exists({ checkFalsy: true }).withMessage(`${campo} es obligatorio`).bail()
+        .isInt({ gt: 0 }).withMessage(`${campo} debe ser un entero válido`);
+
+// Helper reutilizable: campo entero positivo en body
+const bInt = (campo) =>
+    body(campo)
+        .exists({ checkFalsy: true }).withMessage(`${campo} es obligatorio`).bail()
+        .isInt({ gt: 0 }).withMessage(`${campo} debe ser un entero válido`);
+
 // --- GET /api/search?q=  (el vector de inyección documentado en las Fases 1-3) ---
 const searchValidator = [
     query('q')
@@ -98,6 +110,53 @@ const idParamValidator = (nombre = 'id') => [
         .isInt({ gt: 0 }).withMessage(`${nombre} debe ser un entero válido`),
 ];
 
+// --- GET /api/relationship/status?id_origen=&id_destino= ---
+const relationshipStatusValidator = [
+    qInt('id_origen'),
+    qInt('id_destino'),
+];
+
+// --- POST /api/relationship/follow ---
+const relationshipFollowValidator = [
+    bInt('id_solicitador'),
+    bInt('id_receptor'),
+];
+
+// --- POST /api/likes/toggle ---
+const likesToggleValidator = [
+    bInt('id_post'),
+    bInt('id_miembro'),
+];
+
+// --- POST /api/eventos/crear ---
+const eventoCrearValidator = [
+    bInt('id_organizador'),
+    body('nombre')
+        .exists({ checkFalsy: true }).withMessage('El nombre del evento es obligatorio').bail()
+        .isString().trim().isLength({ min: 1, max: 200 }),
+    body('fecha_inicio')
+        .exists({ checkFalsy: true }).withMessage('La fecha de inicio es obligatoria').bail()
+        .isDate().withMessage('fecha_inicio debe ser una fecha válida (YYYY-MM-DD)'),
+    body('hora_inicio')
+        .exists({ checkFalsy: true }).withMessage('La hora de inicio es obligatoria').bail()
+        .matches(/^([01]\d|2[0-3]):[0-5]\d$/).withMessage('hora_inicio debe tener formato HH:MM'),
+];
+
+// --- POST /api/eventos/suscribirse ---
+const eventoSuscribirseValidator = [
+    bInt('id_evento'),
+    bInt('id_usuario'),
+];
+
+// --- POST /api/mensaje ---
+const mensajeValidator = [
+    bInt('id_grupo'),
+    bInt('id_usuario'),
+    body('contenido_textual')
+        .exists({ checkFalsy: true }).withMessage('El contenido es obligatorio').bail()
+        .isString().trim().isLength({ min: 1, max: 2000 }),
+];
+
 module.exports = {
     searchValidator,
     loginValidator,
@@ -105,4 +164,10 @@ module.exports = {
     commentValidator,
     postValidator,
     idParamValidator,
+    relationshipStatusValidator,
+    relationshipFollowValidator,
+    likesToggleValidator,
+    eventoCrearValidator,
+    eventoSuscribirseValidator,
+    mensajeValidator,
 };

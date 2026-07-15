@@ -18,7 +18,21 @@ const { authenticate } = require('../middleware/auth'); // Middleware de segurid
 
 // Validación de entrada (express-validator) — contramedida de inyección (CWE-89, anteproyecto §3.3)
 const { handleValidation } = require('../middleware/validate');
-const V = require('../validators');
+// Destructure all validators for convenience
+const {
+    loginValidator,
+    registerValidator,
+    idParamValidator,
+    postValidator,
+    commentValidator,
+    searchValidator,
+    relationshipStatusValidator,
+    relationshipFollowValidator,
+    likesToggleValidator,
+    eventoCrearValidator,
+    eventoSuscribirseValidator,
+    mensajeValidator,
+} = require('../validators');
 
 // =====================================================================
 // 2. IMPORTACIÓN DE CONTROLADORES
@@ -43,16 +57,16 @@ const grupoController = require('../controllers/grupoController');
 // A.1. MÓDULO DE USUARIOS Y PERFIL
 // ---------------------------------------------------------------------
 // Iniciar sesión
-router.post('/login', V.loginValidator, handleValidation, miembroController.login);
+router.post('/login', loginValidator, handleValidation, miembroController.login);
 
 // Registrar usuario
-router.post('/register', V.registerValidator, handleValidation, miembroController.register);
+router.post('/register', registerValidator, handleValidation, miembroController.register);
 
 // Obtener la información completa del perfil de un usuario
-router.get('/profile/:id', V.idParamValidator('id'), handleValidation, profileController.obtenerPerfil);
+router.get('/profile/:id', idParamValidator('id'), handleValidation, profileController.obtenerPerfil);
 
 // Subir o actualizar la foto de perfil (Usa Multer para procesar la imagen)
-router.post('/miembro/:id/foto', V.idParamValidator('id'), handleValidation, upload.single('foto'), miembroController.actualizarFoto);
+router.post('/miembro/:id/foto', idParamValidator('id'), handleValidation, upload.single('foto'), miembroController.actualizarFoto);
 
 
 // ---------------------------------------------------------------------
@@ -60,36 +74,36 @@ router.post('/miembro/:id/foto', V.idParamValidator('id'), handleValidation, upl
 // ---------------------------------------------------------------------
 // Crear un nuevo post (permite subir imagen opcional)
 // Multer va PRIMERO para poblar req.body desde el multipart; luego se valida.
-router.post('/publicar', upload.single('imagen_post'), V.postValidator, handleValidation, postController.crearPost);
+router.post('/publicar', upload.single('imagen_post'), postValidator, handleValidation, postController.crearPost);
 
 // Obtener el feed de publicaciones (general o filtrado)
 router.get('/post', postController.obtenerPosts);
 
 // Eliminar una publicación específica
-router.delete('/post/:id', V.idParamValidator('id'), handleValidation, postController.eliminarPost);
+router.delete('/post/:id', idParamValidator('id'), handleValidation, postController.eliminarPost);
 
 
 // ---------------------------------------------------------------------
 // A.3. MÓDULO DE INTERACCIONES (LIKES Y COMENTARIOS)
 // ---------------------------------------------------------------------
 // -- Likes --
-router.post('/likes/toggle', likesController.toggleLike); // Dar o quitar like
-router.get('/likes/:id_post', V.idParamValidator('id_post'), handleValidation, likesController.obtenerLikes); // Ver likes de un post
+router.post('/likes/toggle', likesToggleValidator, handleValidation, likesController.toggleLike); // Dar o quitar like
+router.get('/likes/:id_post', idParamValidator('id_post'), handleValidation, likesController.obtenerLikes); // Ver likes de un post
 
 // -- Comentarios --
-router.get('/comments/:id_post', V.idParamValidator('id_post'), handleValidation, commentsController.obtenerComentarios); // Listar comentarios
-router.post('/comments', V.commentValidator, handleValidation, commentsController.crearComentario); // Nuevo comentario
-router.get('/comments/count/:id_post', V.idParamValidator('id_post'), handleValidation, commentsController.contarComentarios); // Contador simple
+router.get('/comments/:id_post', idParamValidator('id_post'), handleValidation, commentsController.obtenerComentarios); // Listar comentarios
+router.post('/comments', commentValidator, handleValidation, commentsController.crearComentario); // Nuevo comentario
+router.get('/comments/count/:id_post', idParamValidator('id_post'), handleValidation, commentsController.contarComentarios); // Contador simple
 
 
 // ---------------------------------------------------------------------
 // A.4. MÓDULO SOCIAL (SEGUIR Y AMIGOS)
 // ---------------------------------------------------------------------
 // Consultar si sigo a un usuario o si somos amigos
-router.get('/relationship/status', relationshipController.consultarEstado);
+router.get('/relationship/status', relationshipStatusValidator, handleValidation, relationshipController.consultarEstado);
 
 // Acción de Seguir / Dejar de seguir
-router.post('/relationship/follow', relationshipController.toggleSeguir);
+router.post('/relationship/follow', relationshipFollowValidator, handleValidation, relationshipController.toggleSeguir);
 
 
 // ---------------------------------------------------------------------
@@ -99,19 +113,19 @@ router.post('/relationship/follow', relationshipController.toggleSeguir);
 router.get('/eventos', eventController.obtenerEventos);
 
 // Crear un nuevo evento (Solo Organizaciones/Dependencias)
-router.post('/eventos/crear', eventController.crearEvento);
+router.post('/eventos/crear', eventoCrearValidator, handleValidation, eventController.crearEvento);
 
 // Inscribirse o desinscribirse de un evento (Asistir)
-router.post('/eventos/suscribirse', eventController.toggleAsistencia);
+router.post('/eventos/suscribirse', eventoSuscribirseValidator, handleValidation, eventController.toggleAsistencia);
 
 
 // ---------------------------------------------------------------------
 // A.6. UTILIDADES
 // ---------------------------------------------------------------------
 // Buscador global (Personas, Organizaciones, etc.)
-router.get('/search', V.searchValidator, handleValidation, searchController.buscar);
+router.get('/search', searchValidator, handleValidation, searchController.buscar);
 router.get('/grupo', grupoController.obtenerGrupos);
-router.post('/mensaje', mensajeController.crearMensaje);
+router.post('/mensaje', mensajeValidator, handleValidation, mensajeController.crearMensaje);
 
 
 // =====================================================================
