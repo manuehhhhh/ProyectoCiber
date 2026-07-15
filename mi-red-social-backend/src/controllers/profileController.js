@@ -29,7 +29,7 @@ async function obtenerDatosBasicos(id) {
 }
 
 module.exports = {
-    obtenerPerfil: async (req, res, next) => {
+    obtenerPerfil: async (req, res) => {
         const { id } = req.params;
 
         // Validar que el ID sea un número entero válido
@@ -124,7 +124,8 @@ module.exports = {
             });
 
         } catch (error) {
-            next(error);
+            console.error(error);
+            res.status(500).json({ error: 'Error al cargar perfil' });
         }
     }
 };

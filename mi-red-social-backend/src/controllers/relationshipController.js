@@ -3,7 +3,7 @@ const { QueryTypes } = require('sequelize');
 
 module.exports = {
     // Verificar si ya lo sigo (para pintar el botón al cargar el perfil)
-    consultarEstado: async (req, res, next) => {
+    consultarEstado: async (req, res) => {
         const { id_origen, id_destino } = req.query; // id_origen soy YO, id_destino es el PERFIL
         try {
             // Vulnerable a inyección SQL
@@ -16,12 +16,13 @@ module.exports = {
             if (!relacion) return res.json({ estado: 'NO_SIGUE' });
             return res.json({ estado: relacion.naturaleza_del_vinculo }); // Retorna 'SIGUE' o 'AMIGO'
         } catch (error) {
-            next(error);
+            console.error(error);
+            res.status(500).json({ error: 'Error al consultar estado' });
         }
     },
 
     // Acción de Seguir/Dejar de Seguir
-    toggleSeguir: async (req, res, next) => {
+    toggleSeguir: async (req, res) => {
         const { id_solicitador, id_receptor } = req.body;
 
         try {
@@ -93,7 +94,8 @@ module.exports = {
                 }
             }
         } catch (error) {
-            next(error);
+            console.error("Error en toggleSeguir:", error);
+            res.status(500).json({ error: 'Error al procesar solicitud' });
         }
     }
 };
